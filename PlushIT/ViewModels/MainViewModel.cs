@@ -43,152 +43,72 @@ namespace PlushIT.ViewModels
 
                 foreach (Triangle3D triangle in obj.Triangles)
                 {
-                    geometryTriangles.Positions.Add(triangle.Point1.Point);
-                    geometryTriangles.Positions.Add(triangle.Point2.Point);
-                    geometryTriangles.Positions.Add(triangle.Point3.Point);
+                    geometryTriangles.Positions.Add(triangle.InnerPoint1!.Point);
+                    geometryTriangles.Positions.Add(triangle.InnerPoint2!.Point);
+                    geometryTriangles.Positions.Add(triangle.InnerPoint3!.Point);
 
-                    geometryTriangles.Normals.Add(triangle.Point1.Normal);
-                    geometryTriangles.Normals.Add(triangle.Point2.Normal);
-                    geometryTriangles.Normals.Add(triangle.Point3.Normal);
+                    geometryTriangles.Normals.Add(triangle.OuterPoint1.Normal);
+                    geometryTriangles.Normals.Add(triangle.OuterPoint2.Normal);
+                    geometryTriangles.Normals.Add(triangle.OuterPoint3.Normal);
 
                     geometryTriangles.TriangleIndices.Add(i);
                     geometryTriangles.TriangleIndices.Add(i + 1);
                     geometryTriangles.TriangleIndices.Add(i + 2);
                     i += 3;
 
-                    NormalPoint3D[] pts = triangle.Point1ToPoint2!.GetPoints();
+                    geometryLines.Positions.Add(triangle.OuterPoint1.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint1.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint2.Point);
 
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point1.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point3.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point4.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint1.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint2.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint2.Point);
 
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point4.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point1.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint2.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint2.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint3.Point);
 
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point5.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point6.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint2.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint3.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint3.Point);
 
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point1.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point1ToPoint2!.Point5.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint3.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint3.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint1.Point);
 
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point1.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point3.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point4.Normal);
+                    geometryLines.Positions.Add(triangle.OuterPoint3.Point);
+                    geometryLines.Positions.Add(triangle.InnerPoint1.Point);
+                    geometryLines.Positions.Add(triangle.OuterPoint1.Point);
+                    
+                    geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint1.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint2.Normal);
+                                                            
+                    geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint2.Normal);
+                    geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
+                                                            
+                    geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint2.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint3.Normal);
+                                                           
+                    geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint3.Normal);
+                    geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
+                                                            
+                    geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint3.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint1.Normal);
+                                                            
+                    geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
+                    geometryLines.Normals.Add(triangle.InnerPoint1.Normal);
+                    geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
 
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point4.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point1.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point5.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point6.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point1.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point5.Normal);
-
-                    for (int k = 0; k < 12; k++)
+                    for (int k = 0; k < 18; k++)
                     {
                         geometryLines.TriangleIndices.Add(k + j);
                     }
-                    j += 12;
-
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point1.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point3.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point4.Point);
-
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point4.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point1.Point);
-
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point5.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point6.Point);
-
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point1.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point2ToPoint3!.Point5.Point);
-
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point1.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point3.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point4.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point4.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point1.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point5.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point6.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point1.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point2ToPoint3!.Point5.Normal);
-
-                    for (int k = 0; k < 12; k++)
-                    {
-                        geometryLines.TriangleIndices.Add(k + j);
-                    }
-                    j += 12;
-
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point1.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point3.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point4.Point);
-
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point4.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point1.Point);
-
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point6.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point5.Point);
-
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point1.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point2.Point);
-                    geometryLines.Positions.Add(triangle.Point3ToPoint1!.Point6.Point);
-
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point1.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point3.Normal);
-                    geometryLines.Normals.Add(triangle.Point1ToPoint2!.Point4.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point4.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point1.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point6.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point5.Normal);
-
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point1.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point2.Normal);
-                    geometryLines.Normals.Add(triangle.Point3ToPoint1!.Point6.Normal);
-
-                    for (int k = 0; k < 12; k++)
-                    {
-                        geometryLines.TriangleIndices.Add(k + j);
-                    }
-                    j += 12;
-
-                    //triangle.Point2ToPoint3!.GetPoints();
-                    //for (int k = 0; k < 6; k++)
-                    //{
-                    //    geometryLines.Positions.Add(pts[k].Point);
-                    //    geometryLines.Normals.Add(pts[k].Normal);
-                    //    geometryLines.TriangleIndices.Add(Hex3D.TriangleIndicies[k] + j);
-                    //}
-                    //j += 6;
-
-                    //triangle.Point3ToPoint1!.GetPoints();
-                    //for (int k = 0; k < 6; k++)
-                    //{
-                    //    geometryLines.Positions.Add(pts[k].Point);
-                    //    geometryLines.Normals.Add(pts[k].Normal);
-                    //    geometryLines.TriangleIndices.Add(Hex3D.TriangleIndicies[k] + j);
-                    //}
-                    //j += 6;
+                    j += 18;
                 }
 
 

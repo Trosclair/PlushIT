@@ -56,48 +56,6 @@ namespace PlushIT.Models
 
                         Triangle3D triangle = new(trianglePoints[0], trianglePoints[1], trianglePoints[2]);
 
-                        Hex3D? line1To2 = obj.Points[trianglePoints[0].PointNumber].ConnectedLineSegments.FirstOrDefault(x => x.Contains(trianglePoints[1]));
-                        Hex3D? line2To3 = obj.Points[trianglePoints[1].PointNumber].ConnectedLineSegments.FirstOrDefault(x => x.Contains(trianglePoints[2]));
-                        Hex3D? line3To1 = obj.Points[trianglePoints[2].PointNumber].ConnectedLineSegments.FirstOrDefault(x => x.Contains(trianglePoints[0]));
-
-                        if (line1To2 is not null)
-                        {
-                            line1To2.Side2 = triangle;
-                        }
-                        else
-                        {
-                            line1To2 = new(trianglePoints[0], trianglePoints[1], 0.005D);
-                            obj.Points[trianglePoints[0].PointNumber].ConnectedLineSegments.Add(line1To2);
-                            obj.Points[trianglePoints[1].PointNumber].ConnectedLineSegments.Add(line1To2);
-                            line1To2.Side1 = triangle;
-                        }
-
-                        if (line2To3 is not null)
-                        {
-                            line2To3.Side2 = triangle;
-                        }
-                        else
-                        {
-                            line2To3 = new(trianglePoints[1], trianglePoints[2], 0.005D);
-                            obj.Points[trianglePoints[1].PointNumber].ConnectedLineSegments.Add(line2To3);
-                            obj.Points[trianglePoints[2].PointNumber].ConnectedLineSegments.Add(line2To3);
-                            line2To3.Side1 = triangle;
-                        }
-
-                        if (line3To1 is not null)
-                        {
-                            line3To1.Side2 = triangle;
-                        }
-                        else
-                        {
-                            line3To1 = new(trianglePoints[2], trianglePoints[0], 0.005D);
-                            obj.Points[trianglePoints[2].PointNumber].ConnectedLineSegments.Add(line3To1);
-                            obj.Points[trianglePoints[0].PointNumber].ConnectedLineSegments.Add(line3To1);
-                            line3To1.Side1 = triangle;
-                        }
-
-                        triangle.SetLineSegments(line1To2, line2To3, line3To1);
-
                         obj.Triangles.Add(triangle);
                     }
                 }

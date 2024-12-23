@@ -58,21 +58,21 @@ namespace PlushIT.Models
 
             if (Side1 is not null)
             {
-                if (!Side1.Point1.Equals(Point1) && !Side1.Point1.Equals(Point2))
+                if (!Side1.OuterPoint1.Equals(Point1) && !Side1.OuterPoint1.Equals(Point2))
                 {
-                    side1ThirdPoint = Side1.Point1;
+                    side1ThirdPoint = Side1.OuterPoint1;
                     point1Angle = Side1.Point3Angle;
                     point2Angle = Side1.Point2Angle;
                 }
-                else if (!Side1.Point2.Equals(Point1) && !Side1.Point2.Equals(Point2))
+                else if (!Side1.OuterPoint2.Equals(Point1) && !Side1.OuterPoint2.Equals(Point2))
                 {
-                    side1ThirdPoint = Side1.Point2;
+                    side1ThirdPoint = Side1.OuterPoint2;
                     point1Angle = Side1.Point1Angle;
                     point2Angle = Side1.Point3Angle;
                 }
                 else
                 {
-                    side1ThirdPoint = Side1.Point3;
+                    side1ThirdPoint = Side1.OuterPoint3;
                     point1Angle = Side1.Point2Angle;
                     point2Angle = Side1.Point1Angle;
                 }
@@ -107,21 +107,21 @@ namespace PlushIT.Models
 
             if (Side2 is not null)
             {
-                if (!Side2.Point1.Equals(Point1) && !Side2.Point1.Equals(Point2))
+                if (!Side2.OuterPoint1.Equals(Point1) && !Side2.OuterPoint1.Equals(Point2))
                 {
-                    side2ThirdPoint = Side2.Point1;
+                    side2ThirdPoint = Side2.OuterPoint1;
                     point1Angle = Side2.Point3Angle;
                     point2Angle = Side2.Point2Angle;
                 }
-                else if (!Side2.Point2.Equals(Point1) && !Side2.Point2.Equals(Point2))
+                else if (!Side2.OuterPoint2.Equals(Point1) && !Side2.OuterPoint2.Equals(Point2))
                 {
-                    side2ThirdPoint = Side2.Point2;
+                    side2ThirdPoint = Side2.OuterPoint2;
                     point1Angle = Side2.Point1Angle;
                     point2Angle = Side2.Point3Angle;
                 }
                 else
                 {
-                    side2ThirdPoint = Side2.Point3;
+                    side2ThirdPoint = Side2.OuterPoint3;
                     point1Angle = Side2.Point2Angle;
                     point2Angle = Side2.Point1Angle;
                 }

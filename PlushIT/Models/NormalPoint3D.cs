@@ -9,7 +9,6 @@ namespace PlushIT.Models
         public Vector3D Normal { get; set; }
 
         public List<Triangle3D> ConnectedTriangles { get; set; } = [];
-        public List<Hex3D> ConnectedLineSegments { get; set; } = [];
         public Dictionary<int, NormalPoint3D> AdjacentPoints { get; set; } = [];
 
     }
