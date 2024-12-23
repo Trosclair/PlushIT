@@ -42,108 +42,36 @@ namespace PlushIT.Views
         {
             Point point = e.GetPosition((IInputElement)sender);
 
-            List<RayMeshGeometry3DHitTestResult> s = CastRay<LinesVisual3D>(point, (HelixViewport3D)sender);
+            List<RayMeshGeometry3DHitTestResult> s = CastRay(point, (HelixViewport3D)sender);
         }
 
         private void HelixViewport3D_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.MouseDevice.LeftButton != MouseButtonState.Pressed)
             {
-                //MainViewModel.HoverUnselectedLinePoints.Children.Clear();
+                MainViewModel.LinesGroup.Children.Clear();
 
                 Point point = e.GetPosition((IInputElement)sender);
 
                 RayMeshGeometry3DHitTestResult? s = CastRay(point, (HelixViewport3D)sender).FirstOrDefault();
 
-                if (s is not null && s.VisualHit is LinesVisual3D)
+                if (s is not null)
                 {
-                    Point3D pos1 = s.MeshHit.Positions[s.VertexIndex1];
-                    Point3D pos2 = s.MeshHit.Positions[s.VertexIndex2];
-                    Point3D pos3 = s.MeshHit.Positions[s.VertexIndex3];
+                    MainViewModel.HighlightVertexFromHitTest(s);
+                    //Point3D pos1 = s.MeshHit.Positions[s.VertexIndex1];
+                    //Point3D pos2 = s.MeshHit.Positions[s.VertexIndex2];
+                    //Point3D pos3 = s.MeshHit.Positions[s.VertexIndex3];
 
-                    MeshGeometry3D hoverMesh = new();
-                    hoverMesh.Positions.Add(pos1);
-                    hoverMesh.Positions.Add(pos2);
-                    hoverMesh.Positions.Add(pos3);
-                    hoverMesh.TriangleIndices.Add(0);
-                    hoverMesh.TriangleIndices.Add(1);
-                    hoverMesh.TriangleIndices.Add(2);
+                    //MeshGeometry3D hoverMesh = new();
+                    //hoverMesh.Positions.Add(pos1);
+                    //hoverMesh.Positions.Add(pos2);
+                    //hoverMesh.Positions.Add(pos3);
+                    //hoverMesh.TriangleIndices.Add(0);
+                    //hoverMesh.TriangleIndices.Add(1);
+                    //hoverMesh.TriangleIndices.Add(2);
 
-                    GeometryModel3D hoverModel = new(hoverMesh, new DiffuseMaterial(Brushes.Yellow));
-                    //MainViewModel.HoverUnselectedLinePoints.Children.Add(hoverModel);
-
-                    double p12Dist = Math.Sqrt(Math.Pow(pos2.X - pos1.X, 2) + Math.Pow(pos2.Y - pos1.Y, 2) + Math.Pow(pos2.Z - pos1.Z, 2));
-                    double p23Dist = Math.Sqrt(Math.Pow(pos3.X - pos2.X, 2) + Math.Pow(pos3.Y - pos2.Y, 2) + Math.Pow(pos3.Z - pos2.Z, 2));
-                    double p31Dist = Math.Sqrt(Math.Pow(pos1.X - pos3.X, 2) + Math.Pow(pos1.Y - pos3.Y, 2) + Math.Pow(pos1.Z - pos3.Z, 2));
-
-                    hoverMesh = new();
-
-                    if (p12Dist < p23Dist && p12Dist < p31Dist)
-                    {
-                        Vector3D shortestSideVector = new(pos2.X - pos1.X, pos2.Y - pos1.Y, pos2.Z - pos1.Z);
-                                             
-                        if (p23Dist > p31Dist)
-                        {
-                            Point3D pos4 = new(pos3.X - shortestSideVector.X, pos3.Y - shortestSideVector.Y, pos3.Z - shortestSideVector.Z);
-                            hoverMesh.Positions.Add(pos4);
-                            hoverMesh.Positions.Add(pos2);
-                            hoverMesh.Positions.Add(pos3);
-                        }
-                        else
-                        {
-                            Point3D pos4 = new(pos3.X - shortestSideVector.X, pos3.Y - shortestSideVector.Y, pos3.Z - shortestSideVector.Z);
-                            hoverMesh.Positions.Add(pos4);
-                            hoverMesh.Positions.Add(pos1);
-                            hoverMesh.Positions.Add(pos3);
-                        }
-                    }
-                    //if (p23Dist < p12Dist && p23Dist < p31Dist)
-                    //{
-                    //    Vector3D shortestSideVector = new(pos3.X - pos2.X, pos3.Y - pos2.Y, pos3.Z - pos2.Z);
-
-                    //    Point3D pos4 = new(pos1.X - shortestSideVector.X, pos1.Y - shortestSideVector.Y, pos1.Z - shortestSideVector.Z);
-
-
-                    //    if (p12Dist > p31Dist)
-                    //    {
-                    //        hoverMesh.Positions.Add(pos4);
-                    //        hoverMesh.Positions.Add(pos2);
-                    //        hoverMesh.Positions.Add(pos1);
-                    //    }
-                    //    else
-                    //    {
-                    //        hoverMesh.Positions.Add(pos4);
-                    //        hoverMesh.Positions.Add(pos1);
-                    //        hoverMesh.Positions.Add(pos3);
-                    //    }
-                    //}
-                    if (p31Dist < p23Dist && p31Dist < p12Dist)
-                    {
-                        Vector3D shortestSideVector = new(pos1.X - pos3.X, pos1.Y - pos3.Y, pos1.Z - pos3.Z);
-
-                        Point3D pos4 = new(pos2.X - shortestSideVector.X, pos2.Y - shortestSideVector.Y, pos2.Z - shortestSideVector.Z);
-
-                        if (p12Dist > p23Dist)
-                        {
-                            hoverMesh.Positions.Add(pos4);
-                            hoverMesh.Positions.Add(pos2);
-                            hoverMesh.Positions.Add(pos1);
-                        }
-                        else
-                        {
-                            hoverMesh.Positions.Add(pos4);
-                            hoverMesh.Positions.Add(pos2);
-                            hoverMesh.Positions.Add(pos3);
-                        }
-                    }
-
-                    hoverMesh.TriangleIndices.Add(0);
-                    hoverMesh.TriangleIndices.Add(1);
-                    hoverMesh.TriangleIndices.Add(2);
-
-                    hoverModel = new(hoverMesh, new DiffuseMaterial(Brushes.Yellow));
-                    //MainViewModel.HoverUnselectedLinePoints.Children.Add(hoverModel);
-
+                    //GeometryModel3D hoverModel = new(hoverMesh, new DiffuseMaterial(Brushes.Yellow));
+                    //MainViewModel.LinesGroup.Children.Add(hoverModel);
                 }
             }
         }

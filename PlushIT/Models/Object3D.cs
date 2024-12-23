@@ -12,8 +12,9 @@ namespace PlushIT.Models
     public class Object3D
     {
         public List<Triangle3D> Triangles { get; } = [];
-        public Dictionary<int, NormalPoint3D> Points = [];
-        public Dictionary<int, Vector3D> Normals = [];
+        public Dictionary<int, NormalPoint3D> OuterPoints { get; } = [];
+        public Dictionary<Point3D, Triangle3D> InnerPointsToTriangle { get; } = [];
+        public Dictionary<int, Vector3D> Normals { get; } = [];
 
         private Object3D() { }
 
@@ -32,7 +33,7 @@ namespace PlushIT.Models
                     if (data[0] == "v")
                     {
                         NormalPoint3D pt = new(new(Convert.ToDouble(data[1]), Convert.ToDouble(data[2]), Convert.ToDouble(data[3])));
-                        obj.Points.Add(pNumber, pt);
+                        obj.OuterPoints.Add(pNumber, pt);
                         pNumber++;
                     }
                     else if (data[0] == "vn")
@@ -46,7 +47,7 @@ namespace PlushIT.Models
                         {
                             string[] fields = data[i].Split("/");
 
-                            trianglePoints[i - 1] = obj.Points[Convert.ToInt32(fields[0])];
+                            trianglePoints[i - 1] = obj.OuterPoints[Convert.ToInt32(fields[0])];
 
                             if (fields.Length > 2)
                             {
@@ -55,6 +56,10 @@ namespace PlushIT.Models
                         }
 
                         Triangle3D triangle = new(trianglePoints[0], trianglePoints[1], trianglePoints[2]);
+
+                        //obj.InnerPointsToTriangle.Add(triangle.InnerPoint1.Point, triangle);
+                        //obj.InnerPointsToTriangle.Add(triangle.InnerPoint2.Point, triangle);
+                        //obj.InnerPointsToTriangle.Add(triangle.InnerPoint3.Point, triangle);
 
                         obj.Triangles.Add(triangle);
                     }

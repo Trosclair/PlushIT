@@ -18,6 +18,10 @@ namespace PlushIT.Models
         public NormalPoint3D InnerPoint2 { get; set; }
         public NormalPoint3D InnerPoint3 { get; set; }
 
+        public Triangle3D? Edge12Neighbor { get; set; }
+        public Triangle3D? Edge23Neighbor { get; set; }
+        public Triangle3D? Edge31Neighbor { get; set; }
+
         public double Point1Angle { get; set; }
         public double Point2Angle { get; set; }
         public double Point3Angle { get; set; }
@@ -93,6 +97,22 @@ namespace PlushIT.Models
             OuterPoint1.ConnectedTriangles.Add(this);
             OuterPoint2.ConnectedTriangles.Add(this);
             OuterPoint3.ConnectedTriangles.Add(this);
+        }
+
+        public void UpdateNeighborList()
+        {
+            if (OuterPoint1.ConnectedTriangles.Intersect(OuterPoint2.ConnectedTriangles).FirstOrDefault() is Triangle3D t)
+            {
+                Edge12Neighbor = t;
+            }
+            else if (OuterPoint1.ConnectedTriangles.Intersect(OuterPoint3.ConnectedTriangles).FirstOrDefault() is Triangle3D t2)
+            {
+                Edge31Neighbor = t2;
+            }
+            else if (OuterPoint2.ConnectedTriangles.Intersect(OuterPoint3.ConnectedTriangles).FirstOrDefault() is Triangle3D t3)
+            {
+                Edge23Neighbor = t3;
+            }
         }
     }
 }

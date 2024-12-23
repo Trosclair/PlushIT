@@ -19,6 +19,13 @@ namespace PlushIT.ViewModels
     public class MainViewModel : ObservableObject
     {
         private Point3D cameraPosition = new(-20, 100, 50);
+        private GeometryModel3D triangleContent = new();
+        private GeometryModel3D lineContent = new();
+        private GeometryModel3D hoverContent = new();
+
+        private MeshGeometry3D geometryTriangles = new();
+        private MeshGeometry3D geometryLines = new();
+        private MeshGeometry3D geometryHover = new();
 
         public Point3D CameraPosition { get => cameraPosition; set { cameraPosition = value; OnPropertyChanged(nameof(CameraPosition)); } }
 
@@ -32,85 +39,110 @@ namespace PlushIT.ViewModels
             {
                 Object3D obj = Object3D.Read(ofd.FileName);
 
-                GeometryModel3D triangleContent = new();
-                MeshGeometry3D geometryTriangles = new();
-
-                GeometryModel3D lineContent = new();
-                MeshGeometry3D geometryLines = new();
-
-                int i = 0;
-                int j = 0;
+                int innerPositionIndex = 0;
+                int outerPositionIndex = 0;
+                int innerNormalIndex = 0;
+                int outerNormalIndex = 0;
 
                 foreach (Triangle3D triangle in obj.Triangles)
                 {
-                    geometryTriangles.Positions.Add(triangle.InnerPoint1!.Point);
-                    geometryTriangles.Positions.Add(triangle.InnerPoint2!.Point);
-                    geometryTriangles.Positions.Add(triangle.InnerPoint3!.Point);
+                    triangle.UpdateNeighborList();
 
-                    geometryTriangles.Normals.Add(triangle.OuterPoint1.Normal);
-                    geometryTriangles.Normals.Add(triangle.OuterPoint2.Normal);
-                    geometryTriangles.Normals.Add(triangle.OuterPoint3.Normal);
-
-                    geometryTriangles.TriangleIndices.Add(i);
-                    geometryTriangles.TriangleIndices.Add(i + 1);
-                    geometryTriangles.TriangleIndices.Add(i + 2);
-                    i += 3;
-
-                    geometryLines.Positions.Add(triangle.OuterPoint1.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint1.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint2.Point);
-
-                    geometryLines.Positions.Add(triangle.OuterPoint1.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint2.Point);
-                    geometryLines.Positions.Add(triangle.OuterPoint2.Point);
-
-                    geometryLines.Positions.Add(triangle.OuterPoint2.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint2.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint3.Point);
-
-                    geometryLines.Positions.Add(triangle.OuterPoint2.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint3.Point);
-                    geometryLines.Positions.Add(triangle.OuterPoint3.Point);
-
-                    geometryLines.Positions.Add(triangle.OuterPoint3.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint3.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint1.Point);
-
-                    geometryLines.Positions.Add(triangle.OuterPoint3.Point);
-                    geometryLines.Positions.Add(triangle.InnerPoint1.Point);
-                    geometryLines.Positions.Add(triangle.OuterPoint1.Point);
-                    
-                    geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint1.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint2.Normal);
-                                                            
-                    geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint2.Normal);
-                    geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
-                                                            
-                    geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint2.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint3.Normal);
-                                                           
-                    geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint3.Normal);
-                    geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
-                                                            
-                    geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint3.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint1.Normal);
-                                                            
-                    geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
-                    geometryLines.Normals.Add(triangle.InnerPoint1.Normal);
-                    geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
-
-                    for (int k = 0; k < 18; k++)
+                    if (triangle.InnerPoint1.InnerPositionNumber == -1)
                     {
-                        geometryLines.TriangleIndices.Add(k + j);
-                    }
-                    j += 18;
-                }
+                        triangle.InnerPoint1.InnerPositionNumber = innerPositionIndex++;
+                        geometryTriangles.Positions.Add(triangle.InnerPoint1.Point);
 
+                        triangle.InnerPoint1.OuterPositionNumber = outerPositionIndex++;
+                        geometryLines.Positions.Add(triangle.InnerPoint1.Point);
+
+                        triangle.InnerPoint1.InnerNormalNumber = innerNormalIndex++;
+                        geometryTriangles.Normals.Add(triangle.InnerPoint1.Normal);
+
+                        triangle.OuterPoint1.OuterNormalNumber = outerNormalIndex++;
+                        geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
+                    }
+                    if (triangle.InnerPoint2.InnerPositionNumber == -1)
+                    {
+                        triangle.InnerPoint2.InnerPositionNumber = innerPositionIndex++;
+                        geometryTriangles.Positions.Add(triangle.InnerPoint2.Point);
+
+                        triangle.InnerPoint2.OuterPositionNumber = outerPositionIndex++;
+                        geometryLines.Positions.Add(triangle.InnerPoint2.Point);
+
+                        triangle.InnerPoint2.InnerNormalNumber = innerNormalIndex++;
+                        geometryTriangles.Normals.Add(triangle.InnerPoint2.Normal);
+
+                        triangle.OuterPoint2.OuterNormalNumber = outerNormalIndex++;
+                        geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
+                    }
+                    if (triangle.InnerPoint3.InnerPositionNumber == -1)
+                    {
+                        triangle.InnerPoint3.InnerPositionNumber = innerPositionIndex++;
+                        geometryTriangles.Positions.Add(triangle.InnerPoint3.Point);
+
+                        triangle.InnerPoint3.OuterPositionNumber = outerPositionIndex++;
+                        geometryLines.Positions.Add(triangle.InnerPoint3.Point);
+
+                        triangle.InnerPoint3.InnerNormalNumber = innerNormalIndex++;
+                        geometryTriangles.Normals.Add(triangle.InnerPoint3.Normal);
+
+                        triangle.OuterPoint3.OuterNormalNumber = outerNormalIndex++;
+                        geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
+                    }
+                    if (triangle.OuterPoint1.OuterPositionNumber == -1)
+                    {
+                        triangle.OuterPoint1.OuterPositionNumber = outerPositionIndex++;
+                        geometryLines.Positions.Add(triangle.InnerPoint1.Point);
+
+                        triangle.OuterPoint1.OuterNormalNumber = outerNormalIndex++;
+                        geometryLines.Normals.Add(triangle.OuterPoint1.Normal);
+                    }
+                    if (triangle.OuterPoint2.OuterPositionNumber == -1)
+                    {
+                        triangle.OuterPoint2.OuterPositionNumber = outerPositionIndex++;
+                        geometryLines.Positions.Add(triangle.InnerPoint2.Point);
+
+                        triangle.OuterPoint2.OuterNormalNumber = outerNormalIndex++;
+                        geometryLines.Normals.Add(triangle.OuterPoint2.Normal);
+                    }
+                    if (triangle.OuterPoint3.OuterPositionNumber == -1)
+                    {
+                        triangle.OuterPoint3.OuterPositionNumber = outerPositionIndex++;
+                        geometryLines.Positions.Add(triangle.InnerPoint3.Point);
+
+                        triangle.OuterPoint3.OuterNormalNumber = outerNormalIndex++;
+                        geometryLines.Normals.Add(triangle.OuterPoint3.Normal);
+                    }
+
+                    geometryTriangles.TriangleIndices.Add(triangle.InnerPoint1.InnerPositionNumber);
+                    geometryTriangles.TriangleIndices.Add(triangle.InnerPoint2.InnerPositionNumber);
+                    geometryTriangles.TriangleIndices.Add(triangle.InnerPoint3.InnerPositionNumber);
+                                                                           
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint1.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint1.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint2.OuterPositionNumber);
+                                                                           
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint1.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint2.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint2.OuterPositionNumber);
+                                                                           
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint2.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint2.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint3.OuterPositionNumber);
+                                                                           
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint2.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint3.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint3.OuterPositionNumber);
+                                                                           
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint3.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint3.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint1.OuterPositionNumber);
+                                                                           
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint3.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.InnerPoint1.OuterPositionNumber);
+                    geometryLines.TriangleIndices.Add(triangle.OuterPoint1.OuterPositionNumber);
+                }
 
                 triangleContent.BackMaterial = new DiffuseMaterial(Brushes.Gray);
                 triangleContent.Material = new DiffuseMaterial(Brushes.Gray);
@@ -122,6 +154,22 @@ namespace PlushIT.ViewModels
 
                 MVGroup.Children.Add(triangleContent);
                 MVGroup.Children.Add(lineContent);
+            }
+        }
+
+        public void HighlightVertexFromHitTest(RayMeshGeometry3DHitTestResult hitTestResult)
+        {
+            if (hitTestResult.MeshHit.Positions.Count == geometryLines.Positions.Count)
+            {
+
+            }
+            else if (hitTestResult.MeshHit.Positions.Count == geometryTriangles.Positions.Count)
+            {
+
+            }
+            else if (hitTestResult.MeshHit.Positions.Count == geometryHover.Positions.Count)
+            {
+
             }
         }
 
