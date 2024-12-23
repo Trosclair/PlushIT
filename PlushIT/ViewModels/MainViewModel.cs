@@ -121,7 +121,7 @@ namespace PlushIT.ViewModels
                 lineContent.Geometry = geometryLines;
 
                 MVGroup.Children.Add(triangleContent);
-                LinesGroup.Children.Add(lineContent);
+                MVGroup.Children.Add(lineContent);
             }
         }
 

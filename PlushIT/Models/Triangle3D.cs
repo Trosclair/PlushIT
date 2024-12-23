@@ -89,6 +89,10 @@ namespace PlushIT.Models
             InnerPoint1.Normal = OuterPoint1.Normal;
             InnerPoint2.Normal = OuterPoint2.Normal;
             InnerPoint3.Normal = OuterPoint3.Normal;
+
+            OuterPoint1.ConnectedTriangles.Add(this);
+            OuterPoint2.ConnectedTriangles.Add(this);
+            OuterPoint3.ConnectedTriangles.Add(this);
         }
     }
 }

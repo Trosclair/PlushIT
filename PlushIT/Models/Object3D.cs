@@ -31,7 +31,7 @@ namespace PlushIT.Models
                 {
                     if (data[0] == "v")
                     {
-                        NormalPoint3D pt = new(new(Convert.ToDouble(data[1]), Convert.ToDouble(data[2]), Convert.ToDouble(data[3])), pNumber);
+                        NormalPoint3D pt = new(new(Convert.ToDouble(data[1]), Convert.ToDouble(data[2]), Convert.ToDouble(data[3])));
                         obj.Points.Add(pNumber, pt);
                         pNumber++;
                     }

@@ -10,7 +10,6 @@ namespace PlushIT.Utilities
 {
     public static class ThirdDimensionalCalculations
     {
-        public static Vector3D FindUnitVector(Vector3D vector) => vector / Math.Sqrt(Math.Pow(vector.X, 2) + Math.Pow(vector.Y, 2) + Math.Pow(vector.Z, 2));
         public static Point3D FindMidPoint(params Point3D[] pts) => new(pts.Sum(x => x.X) / pts.Length, pts.Sum(x => x.Y) / pts.Length, pts.Sum(x => x.Z) / pts.Length);
         public static Vector3D VectorFromPoints(Point3D pt1, Point3D pt2) => new(pt2.X - pt1.X, pt2.Y - pt1.Y, pt2.Z - pt1.Z);
         public static double DistanceBetweenPoints(Point3D pt1, Point3D pt2) => Math.Sqrt(Math.Pow(pt2.X - pt1.X, 2) + Math.Pow(pt2.Y - pt1.Y, 2) + Math.Pow(pt2.Z - pt1.Z, 2));
