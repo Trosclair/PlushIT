@@ -18,18 +18,6 @@ namespace PlushIT.Models
         public NormalPoint3D InnerPoint2 { get; set; }
         public NormalPoint3D InnerPoint3 { get; set; }
 
-        public Triangle3D? Edge12Neighbor { get; set; }
-        public Triangle3D? Edge23Neighbor { get; set; }
-        public Triangle3D? Edge31Neighbor { get; set; }
-
-        public double Point1Angle { get; set; }
-        public double Point2Angle { get; set; }
-        public double Point3Angle { get; set; }
-
-        public double OuterEdge1To2Length { get; set; }
-        public double OuterEdge2To3Length { get; set; }
-        public double OuterEdge3To1Length { get; set; }
-
         public double Thickness { get; set; } = 0.005;
 
         public Triangle3D(NormalPoint3D p1, NormalPoint3D p2, NormalPoint3D p3)
@@ -37,18 +25,6 @@ namespace PlushIT.Models
             OuterPoint1 = p1;
             OuterPoint2 = p2;
             OuterPoint3 = p3;
-
-            OuterEdge1To2Length = ThirdDimensionalCalculations.DistanceBetweenPoints(OuterPoint1.Point, OuterPoint2.Point);
-            OuterEdge2To3Length = ThirdDimensionalCalculations.DistanceBetweenPoints(OuterPoint2.Point, OuterPoint3.Point);
-            OuterEdge3To1Length = ThirdDimensionalCalculations.DistanceBetweenPoints(OuterPoint3.Point, OuterPoint1.Point);
-
-            Point1Angle = Math.Acos((Math.Pow(OuterEdge2To3Length, 2) - Math.Pow(OuterEdge1To2Length, 2) - Math.Pow(OuterEdge3To1Length, 2)) /
-                (-2 * OuterEdge3To1Length * OuterEdge1To2Length)) * (180D / Math.PI);
-
-            Point3Angle = Math.Acos((Math.Pow(OuterEdge1To2Length, 2) - Math.Pow(OuterEdge2To3Length, 2) - Math.Pow(OuterEdge3To1Length, 2)) /
-                (-2 * OuterEdge2To3Length * OuterEdge3To1Length)) * (180D / Math.PI);
-
-            Point2Angle = 180D - Point1Angle - Point3Angle; // Quick mafs! 
 
             Point3D center = ThirdDimensionalCalculations.FindMidPoint(OuterPoint1.Point, OuterPoint2.Point, OuterPoint3.Point);
 
@@ -89,30 +65,6 @@ namespace PlushIT.Models
                 innerEdgePoint13.X - innerEdgePoint12.X + innerEdgePoint23.X,
                 innerEdgePoint13.Y - innerEdgePoint12.Y + innerEdgePoint23.Y,
                 innerEdgePoint13.Z - innerEdgePoint12.Z + innerEdgePoint23.Z));
-
-            InnerPoint1.Normal = OuterPoint1.Normal;
-            InnerPoint2.Normal = OuterPoint2.Normal;
-            InnerPoint3.Normal = OuterPoint3.Normal;
-
-            OuterPoint1.ConnectedTriangles.Add(this);
-            OuterPoint2.ConnectedTriangles.Add(this);
-            OuterPoint3.ConnectedTriangles.Add(this);
-        }
-
-        public void UpdateNeighborList()
-        {
-            if (OuterPoint1.ConnectedTriangles.Intersect(OuterPoint2.ConnectedTriangles).FirstOrDefault() is Triangle3D t)
-            {
-                Edge12Neighbor = t;
-            }
-            else if (OuterPoint1.ConnectedTriangles.Intersect(OuterPoint3.ConnectedTriangles).FirstOrDefault() is Triangle3D t2)
-            {
-                Edge31Neighbor = t2;
-            }
-            else if (OuterPoint2.ConnectedTriangles.Intersect(OuterPoint3.ConnectedTriangles).FirstOrDefault() is Triangle3D t3)
-            {
-                Edge23Neighbor = t3;
-            }
         }
     }
 }
