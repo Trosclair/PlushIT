@@ -3,6 +3,7 @@ using PlushIT.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
@@ -18,10 +19,11 @@ namespace PlushIT.Models
         public Triangle3D? InnerUpperTriangle { get; set; }
         public Triangle3D? InnerLowerTriangle { get; set; }
 
-        public Edge3D? Edge12 { get; set; }
-        public Edge3D? Edge23 { get; set; }
-        public Edge3D? Edge31 { get; set; }
+        public Line3D? Edge12 { get; set; }
+        public Line3D? Edge23 { get; set; }
+        public Line3D? Edge31 { get; set; }
 
+        public Vector3D DisplayOffset { get; set; }
         public double Thickness { get; set; } = 0.005;
 
         public Surface3D(IndexPoint3D p1, IndexPoint3D p2, IndexPoint3D p3, int surfaceIndex)
@@ -76,50 +78,35 @@ namespace PlushIT.Models
             OuterTriangle.Point2.ConnectedSurfaces.Add(this);
             OuterTriangle.Point3.ConnectedSurfaces.Add(this);
 
+            InnerTriangle = new(new(point1), new(point2), new(point3));
+
+            InnerTriangle.Point1.ConnectedSurfaces.Add(this);
+            InnerTriangle.Point2.ConnectedSurfaces.Add(this);
+            InnerTriangle.Point3.ConnectedSurfaces.Add(this);
+
             if (ThirdDimensionalCalculations.AreaOfTriangle(point1, point2, point3) > 1E-10) // zero wasn't filtering out some of the polygons with stupid low areas, still overkill though...
             {
-                InnerTriangle = new(new(point1), new(point2), new(point3));
-
-                Edge12 = new(OuterTriangle.Point1, InnerTriangle.Point1, InnerTriangle.Point2, OuterTriangle.Point2);
-                Edge23 = new(OuterTriangle.Point2, InnerTriangle.Point2, InnerTriangle.Point3, OuterTriangle.Point3);
-                Edge31 = new(OuterTriangle.Point3, InnerTriangle.Point3, InnerTriangle.Point1, OuterTriangle.Point1);
-
                 if (normal.X != 0D || normal.Y != 0D || normal.Z != 0D)
                 {
-                    Vector3D scaleUnitNormal = ThirdDimensionalCalculations.GetUnitVector(normal) * .001;
+                    DisplayOffset = ThirdDimensionalCalculations.GetUnitVector(normal) * .001;
 
                     Point3D point4 = new(
-                        innerEdgePoint12.X + innerEdgePoint13.X - innerEdgePoint23.X + scaleUnitNormal.X,
-                        innerEdgePoint12.Y + innerEdgePoint13.Y - innerEdgePoint23.Y + scaleUnitNormal.Y,
-                        innerEdgePoint12.Z + innerEdgePoint13.Z - innerEdgePoint23.Z + scaleUnitNormal.Z);
+                        innerEdgePoint12.X + innerEdgePoint13.X - innerEdgePoint23.X,
+                        innerEdgePoint12.Y + innerEdgePoint13.Y - innerEdgePoint23.Y,
+                        innerEdgePoint12.Z + innerEdgePoint13.Z - innerEdgePoint23.Z);
 
                     Point3D point5 = new(
-                        innerEdgePoint12.X - innerEdgePoint13.X + innerEdgePoint23.X + scaleUnitNormal.X,
-                        innerEdgePoint12.Y - innerEdgePoint13.Y + innerEdgePoint23.Y + scaleUnitNormal.Y,
-                        innerEdgePoint12.Z - innerEdgePoint13.Z + innerEdgePoint23.Z + scaleUnitNormal.Z);
+                        innerEdgePoint12.X - innerEdgePoint13.X + innerEdgePoint23.X,
+                        innerEdgePoint12.Y - innerEdgePoint13.Y + innerEdgePoint23.Y,
+                        innerEdgePoint12.Z - innerEdgePoint13.Z + innerEdgePoint23.Z);
 
                     Point3D point6 = new(
-                        innerEdgePoint13.X - innerEdgePoint12.X + innerEdgePoint23.X + scaleUnitNormal.X,
-                        innerEdgePoint13.Y - innerEdgePoint12.Y + innerEdgePoint23.Y + scaleUnitNormal.Y,
-                        innerEdgePoint13.Z - innerEdgePoint12.Z + innerEdgePoint23.Z + scaleUnitNormal.Z);
+                        innerEdgePoint13.X - innerEdgePoint12.X + innerEdgePoint23.X,
+                        innerEdgePoint13.Y - innerEdgePoint12.Y + innerEdgePoint23.Y,
+                        innerEdgePoint13.Z - innerEdgePoint12.Z + innerEdgePoint23.Z);
 
-                    Point3D point7 = new(
-                        innerEdgePoint12.X + innerEdgePoint13.X - innerEdgePoint23.X - scaleUnitNormal.X,
-                        innerEdgePoint12.Y + innerEdgePoint13.Y - innerEdgePoint23.Y - scaleUnitNormal.Y,
-                        innerEdgePoint12.Z + innerEdgePoint13.Z - innerEdgePoint23.Z - scaleUnitNormal.Z);
-
-                    Point3D point8 = new(
-                        innerEdgePoint12.X - innerEdgePoint13.X + innerEdgePoint23.X - scaleUnitNormal.X,
-                        innerEdgePoint12.Y - innerEdgePoint13.Y + innerEdgePoint23.Y - scaleUnitNormal.Y,
-                        innerEdgePoint12.Z - innerEdgePoint13.Z + innerEdgePoint23.Z - scaleUnitNormal.Z);
-
-                    Point3D point9 = new(
-                        innerEdgePoint13.X - innerEdgePoint12.X + innerEdgePoint23.X - scaleUnitNormal.X,
-                        innerEdgePoint13.Y - innerEdgePoint12.Y + innerEdgePoint23.Y - scaleUnitNormal.Y,
-                        innerEdgePoint13.Z - innerEdgePoint12.Z + innerEdgePoint23.Z - scaleUnitNormal.Z);
-
-                    InnerUpperTriangle = new(new(point4), new(point5), new(point6));
-                    InnerLowerTriangle = new(new(point7), new(point8), new(point9));
+                    InnerUpperTriangle = new(new(point4 + DisplayOffset), new(point5 + DisplayOffset), new(point6 + DisplayOffset));
+                    InnerLowerTriangle = new(new(point4 - DisplayOffset), new(point5 - DisplayOffset), new(point6 - DisplayOffset));
 
                     InnerUpperTriangle.Point1.ConnectedSurfaces.Add(this);
                     InnerUpperTriangle.Point2.ConnectedSurfaces.Add(this);
@@ -129,22 +116,10 @@ namespace PlushIT.Models
                     InnerLowerTriangle.Point2.ConnectedSurfaces.Add(this);
                     InnerLowerTriangle.Point3.ConnectedSurfaces.Add(this);
                 }
-                else
-                {
-                    InnerTriangle.Point1.ConnectedSurfaces.Add(this);
-                    InnerTriangle.Point2.ConnectedSurfaces.Add(this);
-                    InnerTriangle.Point3.ConnectedSurfaces.Add(this);
-                }
-            }
-            else
-            {
-                Edge12 = new(OuterTriangle.Point1, new(point1), new(point2), OuterTriangle.Point2);
-                Edge23 = new(OuterTriangle.Point2, new(point2), new(point3), OuterTriangle.Point3);
-                Edge31 = new(OuterTriangle.Point3, new(point3), new(point1), OuterTriangle.Point1);
             }
         }
 
-        public Edge3D? FindClosestEdge(Point3D touchPoint)
+        public Line3D? FindClosestEdge(Point3D touchPoint)
         {
             double distTo12 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point1.Point, OuterTriangle.Point2.Point);
             double distTo23 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
@@ -164,19 +139,25 @@ namespace PlushIT.Models
             }
         }
 
-        public Edge3D? GetSharedEdge(Edge3D edge)
+        public (IndexPoint3D, IndexPoint3D, int)? GetSharedEdge(IndexPoint3D pt1, IndexPoint3D pt2)
         {
-            if (edge.IsEdgeShared(Edge12))
+            if (Edge12 == null &&
+                ((pt1.OuterPositionNumber == OuterTriangle.Point1.OuterPositionNumber && pt2.OuterPositionNumber == OuterTriangle.Point2.OuterPositionNumber) ||
+                (pt1.OuterPositionNumber == OuterTriangle.Point2.OuterPositionNumber && pt2.OuterPositionNumber == OuterTriangle.Point1.OuterPositionNumber)))
             {
-                return Edge12;
+                return (InnerTriangle.Point1, InnerTriangle.Point2, 1);
             }
-            else if (edge.IsEdgeShared(Edge23))
+            else if (Edge23 == null &&
+                ((pt1.OuterPositionNumber == OuterTriangle.Point2.OuterPositionNumber && pt2.OuterPositionNumber == OuterTriangle.Point3.OuterPositionNumber) ||
+                (pt1.OuterPositionNumber == OuterTriangle.Point3.OuterPositionNumber && pt2.OuterPositionNumber == OuterTriangle.Point2.OuterPositionNumber)))
             {
-                return Edge23;
+                return (InnerTriangle.Point2, InnerTriangle.Point3, 2);
             }
-            else if (edge.IsEdgeShared(Edge31))
+            else if (Edge31 == null &&
+                ((pt1.OuterPositionNumber == OuterTriangle.Point3.OuterPositionNumber && pt2.OuterPositionNumber == OuterTriangle.Point1.OuterPositionNumber) ||
+                (pt1.OuterPositionNumber == OuterTriangle.Point1.OuterPositionNumber && pt2.OuterPositionNumber == OuterTriangle.Point3.OuterPositionNumber)))
             {
-                return Edge31;
+                return (InnerTriangle.Point3, InnerTriangle.Point1, 3);
             }
 
             return null;

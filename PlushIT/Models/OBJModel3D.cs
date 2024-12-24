@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using PlushIT.Utilities;
+using System.IO;
 using System.Windows.Media.Media3D;
 
 namespace PlushIT.Models
@@ -6,7 +7,7 @@ namespace PlushIT.Models
     public class OBJModel3D
     {
         public List<Surface3D> Surfaces { get; } = [];
-        public Dictionary<int, IndexPoint3D> OuterTrianglePoints { get; } = [];
+        public List<IndexPoint3D> OuterTrianglePoints { get; } = [];
         public Dictionary<Point3D, IndexPoint3D> AllPoints { get; } = [];
 
         private OBJModel3D() { }
@@ -30,7 +31,7 @@ namespace PlushIT.Models
                     {
                         IndexPoint3D pt = new(new(Convert.ToDouble(data[1]), Convert.ToDouble(data[2]), Convert.ToDouble(data[3])));
                         pt.OuterPositionNumber = outerPositionIndex++;
-                        obj.OuterTrianglePoints.Add(pNumber, pt);
+                        obj.OuterTrianglePoints.Add(pt);
                         pNumber++;
                     }
                     else if (data[0] == "f")
@@ -39,7 +40,7 @@ namespace PlushIT.Models
                         {
                             string[] fields = data[i].Split("/");
 
-                            trianglePoints[i - 1] = obj.OuterTrianglePoints[Convert.ToInt32(fields[0])];
+                            trianglePoints[i - 1] = obj.OuterTrianglePoints[Convert.ToInt32(fields[0]) - 1];
                         }
 
                         Surface3D surface = new(trianglePoints[0], trianglePoints[1], trianglePoints[2], surfaceIndex);
@@ -74,9 +75,12 @@ namespace PlushIT.Models
                                 surface.InnerTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
                                 surface.InnerTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
 
-                                obj.AllPoints.Add(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point1);
-                                obj.AllPoints.Add(surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point2);
-                                obj.AllPoints.Add(surface.InnerTriangle.Point3.Point, surface.InnerTriangle.Point3);
+                                if (ThirdDimensionalCalculations.AreaOfTriangle(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point3.Point) > 1E-10)
+                                {
+                                    obj.AllPoints.Add(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point1);
+                                    obj.AllPoints.Add(surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point2);
+                                    obj.AllPoints.Add(surface.InnerTriangle.Point3.Point, surface.InnerTriangle.Point3);
+                                }
                             }
                         }
 
@@ -85,6 +89,19 @@ namespace PlushIT.Models
                     }
                 }
             }
+
+            foreach (IndexPoint3D pt in obj.OuterTrianglePoints)
+            {
+                List<Surface3D> unfinishedSurfaces = [.. pt.ConnectedSurfaces];
+                for (int i = 0; i < unfinishedSurfaces.Count - 1; i++)
+                {
+                    for (int j = i + 1; j < unfinishedSurfaces.Count; j++)
+                    {
+                        Line3D.TryCreateLine(unfinishedSurfaces[i], unfinishedSurfaces[j]);
+                    }
+                }
+            }
+            
             return obj;
         }
     }

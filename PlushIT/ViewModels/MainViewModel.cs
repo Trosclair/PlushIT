@@ -29,8 +29,7 @@ namespace PlushIT.ViewModels
             if (ofd.ShowDialog() is bool b && b)
             {
                 Model = OBJModel3D.Read(ofd.FileName);
-
-                foreach (IndexPoint3D pt in Model.OuterTrianglePoints.Values.OrderBy(x => x.OuterPositionNumber))
+                foreach (IndexPoint3D pt in Model.OuterTrianglePoints)
                 {
                     geometryLines.Positions.Add(pt.Point);
                 }
@@ -79,10 +78,7 @@ namespace PlushIT.ViewModels
                 lineContent.Material = new DiffuseMaterial(Brushes.Black);
                 lineContent.Geometry = geometryLines;
 
-                hoverContent.BackMaterial = new DiffuseMaterial(Brushes.Yellow);
-                hoverContent.Material = new DiffuseMaterial(Brushes.Yellow);
                 hoverContent.Geometry = geometryHover;
-                geometryHover.TriangleIndices = [0, 1, 2, 0, 2, 3, 3, 4, 5, 3, 5, 0];
 
                 MVGroup.Children.Add(lineContent);
                 MVGroup.Children.Add(triangleContent);
@@ -107,14 +103,11 @@ namespace PlushIT.ViewModels
                         surface = pt.ConnectedSurfaces.FirstOrDefault(x => x.IsSuppliedPointAVertice(pos2) && x.IsSuppliedPointAVertice(pos3));
                     }
 
-                    if (surface?.FindClosestEdge(hitTestResult.PointHit) is Edge3D edge1)
+                    if (surface?.FindClosestEdge(hitTestResult.PointHit) is Line3D edge)
                     {
-                        Surface3D? otherSurface = edge1.StartPoint.ConnectedSurfaces.Intersect(edge1.EndPoint.ConnectedSurfaces).SingleOrDefault(x => x.SurfaceIndex != surface.SurfaceIndex);
-
-                        if (otherSurface?.GetSharedEdge(edge1) is Edge3D edge2)
-                        {
-                            geometryHover.Positions = [edge1.StartPoint.Point, edge1.Point1.Point, edge1.Point2.Point, edge1.EndPoint.Point, edge2.Point1.Point, edge2.Point2.Point];
-                        }
+                        hoverContent.BackMaterial = new DiffuseMaterial(Brushes.Yellow);
+                        hoverContent.Material = new DiffuseMaterial(Brushes.Yellow);
+                        edge.RenderLine(geometryHover);
                     }
                 }
             }
