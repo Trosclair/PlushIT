@@ -11,10 +11,7 @@
         <hx:HelixViewport3D ShowCameraInfo="True" ClipToBounds="False" RenderOptions.CachingHint="Cache" RenderOptions.EdgeMode="Aliased" MouseLeftButtonDown="HelixViewport3D_MouseLeftButtonDown" MouseMove="HelixViewport3D_MouseMove">
             <hx:DefaultLights/>
             <ModelVisual3D Content="{Binding MVGroup}"/>
-            <hx:LinesVisual3D Points="{Binding LinePoints}" Color="Black" Thickness="7"/>
-            <hx:LinesVisual3D Points="{Binding SelectedLinePoints}" Color="Yellow" Thickness="7"/>
             <ModelVisual3D Content="{Binding LinesGroup}"/>
-            <hx:LinesVisual3D Points="{Binding HoverSelectedLinePoints}" Color="Black" Thickness="7"/>
         </hx:HelixViewport3D>
     </Grid>
 </Window>

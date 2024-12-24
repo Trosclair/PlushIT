@@ -31,18 +31,19 @@ namespace PlushIT.ViewModels
 
         public Model3DGroup MVGroup { get; set; } = new();
         public Model3DGroup LinesGroup { get; set; } = new();
+        public OBJModel3D? Model { get; set; }
         public MainViewModel()
         {
             OpenFileDialog ofd = new();
 
             if (ofd.ShowDialog() is bool b && b)
             {
-                Models.Model3D obj = Models.Model3D.Read(ofd.FileName);
+                Model = OBJModel3D.Read(ofd.FileName);
 
                 int innerPositionIndex = 0;
                 int outerPositionIndex = 0;
 
-                foreach (Surface3D triangle in obj.Surfaces)
+                foreach (Surface3D triangle in Model.Surfaces)
                 {
                     if (triangle.InnerTriangle is not null)
                     {
@@ -137,7 +138,68 @@ namespace PlushIT.ViewModels
             }
             else if (hitTestResult.MeshHit.Positions.Count == geometryTriangles.Positions.Count)
             {
+                Point3D pos1 = hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex1];
+                Point3D pos2 = hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex2];
+                Point3D pos3 = hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex3];
 
+                if (Model is not null)
+                {
+                    Surface3D? surface = null;
+                    if (Model.AllPoints.TryGetValue(pos1, out IndexPoint3D? pt) && pt is not null)
+                    {
+                        surface = pt.ConnectedTriangles.Where(x => x.InnerTriangle is not null).FirstOrDefault();
+                    }
+                    else if (Model.AllPoints.TryGetValue(pos2, out pt) && pt is not null)
+                    {
+                        surface = pt.ConnectedTriangles.Where(x => x.InnerTriangle is not null).FirstOrDefault();
+                    }
+                    else if (Model.AllPoints.TryGetValue(pos3, out pt) && pt is not null)
+                    {
+                        surface = pt.ConnectedTriangles.Where(x => x.InnerTriangle is not null).FirstOrDefault();
+                    }
+
+                    if (surface is not null)
+                    {
+                        Edge3D? edge1 = surface.FindClosestEdge(hitTestResult.PointHit);
+
+                        if (edge1 is not null)
+                        {
+                            Surface3D? otherSurface = edge1.StartPoint.ConnectedTriangles.Intersect(edge1.EndPoint.ConnectedTriangles).SingleOrDefault(x => x.SurfaceIndex != surface.SurfaceIndex);
+                            
+                            if (otherSurface is not null && otherSurface.GetSharedEdge(edge1) is Edge3D edge2)
+                            {
+                                geometryHover = new();
+                                geometryHover.Positions.Add(edge1.StartPoint.Point);
+                                geometryHover.Positions.Add(edge1.Point1.Point);
+                                geometryHover.Positions.Add(edge1.Point2.Point);
+                                geometryHover.Positions.Add(edge1.EndPoint.Point);
+                                geometryHover.Positions.Add(edge2.Point1.Point);
+                                geometryHover.Positions.Add(edge2.Point2.Point);
+
+                                geometryHover.TriangleIndices.Add(0);
+                                geometryHover.TriangleIndices.Add(1);
+                                geometryHover.TriangleIndices.Add(2);
+
+                                geometryHover.TriangleIndices.Add(0);
+                                geometryHover.TriangleIndices.Add(2);
+                                geometryHover.TriangleIndices.Add(3);
+
+                                geometryHover.TriangleIndices.Add(3);
+                                geometryHover.TriangleIndices.Add(4);
+                                geometryHover.TriangleIndices.Add(5);
+
+                                geometryHover.TriangleIndices.Add(3);
+                                geometryHover.TriangleIndices.Add(5);
+                                geometryHover.TriangleIndices.Add(0);
+
+                                GeometryModel3D hoverModel = new(geometryHover, new DiffuseMaterial(Brushes.Yellow));
+                                hoverModel.BackMaterial = new DiffuseMaterial(Brushes.Yellow);
+                                LinesGroup.Children.Add(hoverModel);
+
+                            }
+                        }
+                    }
+                }
             }
             else if (hitTestResult.MeshHit.Positions.Count == geometryHover.Positions.Count)
             {
