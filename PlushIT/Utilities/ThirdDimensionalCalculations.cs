@@ -1,15 +1,17 @@
-﻿using PlushIT.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
+﻿using System.Windows.Media.Media3D;
 
 namespace PlushIT.Utilities
 {
     public static class ThirdDimensionalCalculations
     {
+        public static double AreaOfTriangle(Point3D pt1, Point3D pt2, Point3D pt3)
+        {
+            double a = DistanceBetweenPoints(pt1, pt2);
+            double b = DistanceBetweenPoints(pt2, pt3);
+            double c = DistanceBetweenPoints(pt3, pt1);
+            double s = (a + b + c) / 2;
+            return Math.Sqrt(s * (s - a) * (s - b) * (s - c));
+        }
         public static Point3D FindMidPoint(params Point3D[] pts) => new(pts.Sum(x => x.X) / pts.Length, pts.Sum(x => x.Y) / pts.Length, pts.Sum(x => x.Z) / pts.Length);
         public static Vector3D VectorFromPoints(Point3D pt1, Point3D pt2) => new(pt2.X - pt1.X, pt2.Y - pt1.Y, pt2.Z - pt1.Z);
         public static double DistanceBetweenPoints(Point3D pt1, Point3D pt2) => Math.Sqrt(Math.Pow(pt2.X - pt1.X, 2) + Math.Pow(pt2.Y - pt1.Y, 2) + Math.Pow(pt2.Z - pt1.Z, 2));

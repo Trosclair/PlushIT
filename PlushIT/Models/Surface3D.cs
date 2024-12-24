@@ -1,4 +1,5 @@
-﻿using PlushIT.Utilities;
+﻿using HelixToolkit.Wpf;
+using PlushIT.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,29 +9,23 @@ using System.Windows.Media.Media3D;
 
 namespace PlushIT.Models
 {
-    public class Triangle3D
+    public class Surface3D
     {
-        public NormalPoint3D OuterPoint1 { get; set; }
-        public NormalPoint3D OuterPoint2 { get; set; }
-        public NormalPoint3D OuterPoint3 { get; set; }
-
-        public NormalPoint3D InnerPoint1 { get; set; }
-        public NormalPoint3D InnerPoint2 { get; set; }
-        public NormalPoint3D InnerPoint3 { get; set; }
+        public Triangle3D OuterTriangle { get; set; }
+        public Triangle3D? InnerTriangle { get; set; }
+        public IndexPoint3D ScramblePoint { get; set; }
 
         public double Thickness { get; set; } = 0.005;
 
-        public Triangle3D(NormalPoint3D p1, NormalPoint3D p2, NormalPoint3D p3)
+        public Surface3D(IndexPoint3D p1, IndexPoint3D p2, IndexPoint3D p3)
         {
-            OuterPoint1 = p1;
-            OuterPoint2 = p2;
-            OuterPoint3 = p3;
+            OuterTriangle = new(p1, p2, p3);
 
-            Point3D center = ThirdDimensionalCalculations.FindMidPoint(OuterPoint1.Point, OuterPoint2.Point, OuterPoint3.Point);
+            Point3D center = ThirdDimensionalCalculations.FindMidPoint(OuterTriangle.Point1.Point, OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
 
-            Point3D midPoint12 = ThirdDimensionalCalculations.FindMidPoint(OuterPoint1.Point, OuterPoint2.Point);
-            Point3D midPoint23 = ThirdDimensionalCalculations.FindMidPoint(OuterPoint2.Point, OuterPoint3.Point);
-            Point3D midPoint13 = ThirdDimensionalCalculations.FindMidPoint(OuterPoint1.Point, OuterPoint3.Point);
+            Point3D midPoint12 = ThirdDimensionalCalculations.FindMidPoint(OuterTriangle.Point1.Point, OuterTriangle.Point2.Point);
+            Point3D midPoint23 = ThirdDimensionalCalculations.FindMidPoint(OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
+            Point3D midPoint13 = ThirdDimensionalCalculations.FindMidPoint(OuterTriangle.Point1.Point, OuterTriangle.Point3.Point);
 
             Vector3D midPoint12ToCenter = ThirdDimensionalCalculations.VectorFromPoints(midPoint12, center);
             double scale12 = Thickness / ThirdDimensionalCalculations.GetVectorMagnitude(midPoint12ToCenter);
@@ -51,20 +46,31 @@ namespace PlushIT.Models
             Point3D innerEdgePoint13 = Point3D.Add(midPoint13, midPoint13ToInnerTriangleEdge);
 
             /// Midpoint shenanigans...
-            InnerPoint1 = new(new(
+            IndexPoint3D point1 = new(new(
                 innerEdgePoint12.X + innerEdgePoint13.X - innerEdgePoint23.X,
                 innerEdgePoint12.Y + innerEdgePoint13.Y - innerEdgePoint23.Y,
                 innerEdgePoint12.Z + innerEdgePoint13.Z - innerEdgePoint23.Z));
 
-            InnerPoint2 = new(new(
+            IndexPoint3D point2 = new(new(
                 innerEdgePoint12.X - innerEdgePoint13.X + innerEdgePoint23.X,
                 innerEdgePoint12.Y - innerEdgePoint13.Y + innerEdgePoint23.Y,
                 innerEdgePoint12.Z - innerEdgePoint13.Z + innerEdgePoint23.Z));
 
-            InnerPoint3 = new(new(
+            IndexPoint3D point3 = new(new(
                 innerEdgePoint13.X - innerEdgePoint12.X + innerEdgePoint23.X,
                 innerEdgePoint13.Y - innerEdgePoint12.Y + innerEdgePoint23.Y,
                 innerEdgePoint13.Z - innerEdgePoint12.Z + innerEdgePoint23.Z));
+
+            if (ThirdDimensionalCalculations.AreaOfTriangle(point1.Point, point2.Point, point3.Point) != 0D)
+            {
+                InnerTriangle = new(point1, point2, point3);
+            }
+
+            ScramblePoint = new(center);
+
+            OuterTriangle.Point1.ConnectedTriangles.Add(this);
+            OuterTriangle.Point2.ConnectedTriangles.Add(this);
+            OuterTriangle.Point3.ConnectedTriangles.Add(this);
         }
     }
 }
