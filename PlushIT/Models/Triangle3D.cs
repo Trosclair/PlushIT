@@ -32,5 +32,12 @@ namespace PlushIT.Models
             MidPointBetween2And3 = ThirdDimensionalCalculations.FindMidPoint(Point2.Point, Point3.Point);
             MidPointBetween3And1 = ThirdDimensionalCalculations.FindMidPoint(Point1.Point, Point3.Point);
         }
+
+        public bool IsPointAVertice(Point3D point)
+        {
+            return Point1.Point == point ||
+                Point2.Point == point ||
+                Point3.Point == point;
+        }
     }
 }

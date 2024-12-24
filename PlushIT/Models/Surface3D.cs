@@ -82,9 +82,9 @@ namespace PlushIT.Models
 
         public Edge3D? FindClosestEdge(Point3D touchPoint)
         {
-            double distTo12 = ThirdDimensionalCalculations.DistanceBetweenPoints(OuterTriangle.MidPointBetween1And2, touchPoint);
-            double distTo23 = ThirdDimensionalCalculations.DistanceBetweenPoints(OuterTriangle.MidPointBetween2And3, touchPoint);
-            double distTo31 = ThirdDimensionalCalculations.DistanceBetweenPoints(OuterTriangle.MidPointBetween3And1, touchPoint);
+            double distTo12 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point1.Point, OuterTriangle.Point2.Point);
+            double distTo23 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
+            double distTo31 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point3.Point, OuterTriangle.Point1.Point);
 
             if (distTo12 < distTo23 && distTo12 < distTo31)
             {
@@ -116,6 +116,11 @@ namespace PlushIT.Models
             }
 
             return null;
+        }
+
+        public bool IsSuppliedPointAVertice(Point3D point)
+        {
+            return OuterTriangle.IsPointAVertice(point) || (InnerTriangle is not null && InnerTriangle.IsPointAVertice(point));
         }
     }
 }

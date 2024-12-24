@@ -49,7 +49,6 @@ namespace PlushIT.Views
         {
             if (e.MouseDevice.LeftButton != MouseButtonState.Pressed)
             {
-                MainViewModel.LinesGroup.Children.Clear();
 
                 Point point = e.GetPosition((IInputElement)sender);
 
@@ -58,20 +57,6 @@ namespace PlushIT.Views
                 if (s is not null)
                 {
                     MainViewModel.HighlightVertexFromHitTest(s);
-                    //Point3D pos1 = s.MeshHit.Positions[s.VertexIndex1];
-                    //Point3D pos2 = s.MeshHit.Positions[s.VertexIndex2];
-                    //Point3D pos3 = s.MeshHit.Positions[s.VertexIndex3];
-
-                    //MeshGeometry3D hoverMesh = new();
-                    //hoverMesh.Positions.Add(pos1);
-                    //hoverMesh.Positions.Add(pos2);
-                    //hoverMesh.Positions.Add(pos3);
-                    //hoverMesh.TriangleIndices.Add(0);
-                    //hoverMesh.TriangleIndices.Add(1);
-                    //hoverMesh.TriangleIndices.Add(2);
-
-                    //GeometryModel3D hoverModel = new(hoverMesh, new DiffuseMaterial(Brushes.Yellow));
-                    //MainViewModel.LinesGroup.Children.Add(hoverModel);
                 }
             }
         }

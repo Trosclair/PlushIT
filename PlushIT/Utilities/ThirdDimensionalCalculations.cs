@@ -4,6 +4,15 @@ namespace PlushIT.Utilities
 {
     public static class ThirdDimensionalCalculations
     {
+        public static double DistanceFromPoint1ToLine23(Point3D pt1, Point3D pt2, Point3D pt3)
+        {
+            Vector3D d = (pt3 - pt2) / DistanceBetweenPoints(pt3, pt2);
+            Vector3D vec12 = pt1 - pt2;
+            double t = Vector3D.DotProduct(vec12, d);
+            Point3D p = pt2 + (t * d);
+            return DistanceBetweenPoints(p, pt1);
+        }
+
         public static double AreaOfTriangle(Point3D pt1, Point3D pt2, Point3D pt3)
         {
             double a = DistanceBetweenPoints(pt1, pt2);

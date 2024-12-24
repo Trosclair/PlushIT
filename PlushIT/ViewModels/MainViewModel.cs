@@ -125,18 +125,20 @@ namespace PlushIT.ViewModels
                 lineContent.Material = new DiffuseMaterial(Brushes.Black);
                 lineContent.Geometry = geometryLines;
 
+                hoverContent.BackMaterial = new DiffuseMaterial(Brushes.Yellow);
+                hoverContent.Material = new DiffuseMaterial(Brushes.Yellow);
+                hoverContent.Geometry = geometryHover;
+
                 MVGroup.Children.Add(triangleContent);
                 MVGroup.Children.Add(lineContent);
+                LinesGroup.Children.Add(hoverContent);
             }
         }
 
         public void HighlightVertexFromHitTest(RayMeshGeometry3DHitTestResult hitTestResult)
         {
-            if (hitTestResult.MeshHit.Positions.Count == geometryLines.Positions.Count)
-            {
-
-            }
-            else if (hitTestResult.MeshHit.Positions.Count == geometryTriangles.Positions.Count)
+            if (hitTestResult.MeshHit.Positions.Count == geometryLines.Positions.Count || 
+                hitTestResult.MeshHit.Positions.Count == geometryTriangles.Positions.Count)
             {
                 Point3D pos1 = hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex1];
                 Point3D pos2 = hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex2];
@@ -147,63 +149,43 @@ namespace PlushIT.ViewModels
                     Surface3D? surface = null;
                     if (Model.AllPoints.TryGetValue(pos1, out IndexPoint3D? pt) && pt is not null)
                     {
-                        surface = pt.ConnectedTriangles.Where(x => x.InnerTriangle is not null).FirstOrDefault();
-                    }
-                    else if (Model.AllPoints.TryGetValue(pos2, out pt) && pt is not null)
-                    {
-                        surface = pt.ConnectedTriangles.Where(x => x.InnerTriangle is not null).FirstOrDefault();
-                    }
-                    else if (Model.AllPoints.TryGetValue(pos3, out pt) && pt is not null)
-                    {
-                        surface = pt.ConnectedTriangles.Where(x => x.InnerTriangle is not null).FirstOrDefault();
+                        surface = pt.ConnectedTriangles.FirstOrDefault(x => x.IsSuppliedPointAVertice(pos2) && x.IsSuppliedPointAVertice(pos3));
                     }
 
-                    if (surface is not null)
+                    if (surface?.FindClosestEdge(hitTestResult.PointHit) is Edge3D edge1)
                     {
-                        Edge3D? edge1 = surface.FindClosestEdge(hitTestResult.PointHit);
+                        Surface3D? otherSurface = edge1.StartPoint.ConnectedTriangles.Intersect(edge1.EndPoint.ConnectedTriangles).SingleOrDefault(x => x.SurfaceIndex != surface.SurfaceIndex);
 
-                        if (edge1 is not null)
+                        if (otherSurface?.GetSharedEdge(edge1) is Edge3D edge2)
                         {
-                            Surface3D? otherSurface = edge1.StartPoint.ConnectedTriangles.Intersect(edge1.EndPoint.ConnectedTriangles).SingleOrDefault(x => x.SurfaceIndex != surface.SurfaceIndex);
-                            
-                            if (otherSurface is not null && otherSurface.GetSharedEdge(edge1) is Edge3D edge2)
-                            {
-                                geometryHover = new();
-                                geometryHover.Positions.Add(edge1.StartPoint.Point);
-                                geometryHover.Positions.Add(edge1.Point1.Point);
-                                geometryHover.Positions.Add(edge1.Point2.Point);
-                                geometryHover.Positions.Add(edge1.EndPoint.Point);
-                                geometryHover.Positions.Add(edge2.Point1.Point);
-                                geometryHover.Positions.Add(edge2.Point2.Point);
+                            geometryHover.Positions.Clear();
+                            geometryHover.TriangleIndices.Clear();
 
-                                geometryHover.TriangleIndices.Add(0);
-                                geometryHover.TriangleIndices.Add(1);
-                                geometryHover.TriangleIndices.Add(2);
+                            geometryHover.Positions.Add(edge1.StartPoint.Point);
+                            geometryHover.Positions.Add(edge1.Point1.Point);
+                            geometryHover.Positions.Add(edge1.Point2.Point);
+                            geometryHover.Positions.Add(edge1.EndPoint.Point);
+                            geometryHover.Positions.Add(edge2.Point1.Point);
+                            geometryHover.Positions.Add(edge2.Point2.Point);
 
-                                geometryHover.TriangleIndices.Add(0);
-                                geometryHover.TriangleIndices.Add(2);
-                                geometryHover.TriangleIndices.Add(3);
+                            geometryHover.TriangleIndices.Add(0);
+                            geometryHover.TriangleIndices.Add(1);
+                            geometryHover.TriangleIndices.Add(2);
 
-                                geometryHover.TriangleIndices.Add(3);
-                                geometryHover.TriangleIndices.Add(4);
-                                geometryHover.TriangleIndices.Add(5);
+                            geometryHover.TriangleIndices.Add(0);
+                            geometryHover.TriangleIndices.Add(2);
+                            geometryHover.TriangleIndices.Add(3);
 
-                                geometryHover.TriangleIndices.Add(3);
-                                geometryHover.TriangleIndices.Add(5);
-                                geometryHover.TriangleIndices.Add(0);
+                            geometryHover.TriangleIndices.Add(3);
+                            geometryHover.TriangleIndices.Add(4);
+                            geometryHover.TriangleIndices.Add(5);
 
-                                GeometryModel3D hoverModel = new(geometryHover, new DiffuseMaterial(Brushes.Yellow));
-                                hoverModel.BackMaterial = new DiffuseMaterial(Brushes.Yellow);
-                                LinesGroup.Children.Add(hoverModel);
-
-                            }
+                            geometryHover.TriangleIndices.Add(3);
+                            geometryHover.TriangleIndices.Add(5);
+                            geometryHover.TriangleIndices.Add(0);
                         }
                     }
                 }
-            }
-            else if (hitTestResult.MeshHit.Positions.Count == geometryHover.Positions.Count)
-            {
-
             }
         }
 
