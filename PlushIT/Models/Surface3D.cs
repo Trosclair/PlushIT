@@ -66,6 +66,10 @@ namespace PlushIT.Models
             {
                 InnerTriangle = new(new(point1), new(point2), new(point3));
 
+                OuterTriangle.Point1.ConnectedTriangles.Add(this);
+                OuterTriangle.Point2.ConnectedTriangles.Add(this);
+                OuterTriangle.Point3.ConnectedTriangles.Add(this);
+
                 InnerTriangle.Point1.ConnectedTriangles.Add(this);
                 InnerTriangle.Point2.ConnectedTriangles.Add(this);
                 InnerTriangle.Point3.ConnectedTriangles.Add(this);
@@ -74,10 +78,6 @@ namespace PlushIT.Models
                 Edge23 = new(OuterTriangle.Point2, InnerTriangle.Point2, InnerTriangle.Point3, OuterTriangle.Point3);
                 Edge31 = new(OuterTriangle.Point3, InnerTriangle.Point3, InnerTriangle.Point1, OuterTriangle.Point1);
             }
-
-            OuterTriangle.Point1.ConnectedTriangles.Add(this);
-            OuterTriangle.Point2.ConnectedTriangles.Add(this);
-            OuterTriangle.Point3.ConnectedTriangles.Add(this);
         }
 
         public Edge3D? FindClosestEdge(Point3D touchPoint)

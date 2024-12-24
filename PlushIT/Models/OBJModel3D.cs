@@ -18,6 +18,8 @@ namespace PlushIT.Models
             IndexPoint3D[] trianglePoints = new IndexPoint3D[3];
             int pNumber = 1;
             int surfaceIndex = 0;
+            int outerPositionIndex = 0;
+            int innerPositionIndex = 0;
 
             foreach (string dataLine in arr)
             {
@@ -39,20 +41,33 @@ namespace PlushIT.Models
                             trianglePoints[i - 1] = obj.OuterTrianglePoints[Convert.ToInt32(fields[0])];
                         }
 
-                        Surface3D surface = new(trianglePoints[0], trianglePoints[1], trianglePoints[2], surfaceIndex++);
-
-                        obj.AllPoints.TryAdd(surface.OuterTriangle.Point1.Point, surface.OuterTriangle.Point1);
-                        obj.AllPoints.TryAdd(surface.OuterTriangle.Point2.Point, surface.OuterTriangle.Point2);
-                        obj.AllPoints.TryAdd(surface.OuterTriangle.Point3.Point, surface.OuterTriangle.Point3);
+                        Surface3D surface = new(trianglePoints[0], trianglePoints[1], trianglePoints[2], surfaceIndex);
 
                         if (surface.InnerTriangle is not null)
                         {
+                            surface.OuterTriangle.Point1.OuterPositionNumber = surface.OuterTriangle.Point1.OuterPositionNumber == -1 ? outerPositionIndex++ : surface.OuterTriangle.Point1.OuterPositionNumber;
+                            surface.OuterTriangle.Point2.OuterPositionNumber = surface.OuterTriangle.Point2.OuterPositionNumber == -1 ? outerPositionIndex++ : surface.OuterTriangle.Point2.OuterPositionNumber;
+                            surface.OuterTriangle.Point3.OuterPositionNumber = surface.OuterTriangle.Point3.OuterPositionNumber == -1 ? outerPositionIndex++ : surface.OuterTriangle.Point3.OuterPositionNumber;
+
+                            surface.InnerTriangle.Point1.OuterPositionNumber = outerPositionIndex++;
+                            surface.InnerTriangle.Point2.OuterPositionNumber = outerPositionIndex++;
+                            surface.InnerTriangle.Point3.OuterPositionNumber = outerPositionIndex++;
+
+                            surface.InnerTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
+
+                            obj.AllPoints.TryAdd(surface.OuterTriangle.Point1.Point, surface.OuterTriangle.Point1);
+                            obj.AllPoints.TryAdd(surface.OuterTriangle.Point2.Point, surface.OuterTriangle.Point2);
+                            obj.AllPoints.TryAdd(surface.OuterTriangle.Point3.Point, surface.OuterTriangle.Point3);
+
                             obj.AllPoints.Add(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point1);
                             obj.AllPoints.Add(surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point2);
                             obj.AllPoints.Add(surface.InnerTriangle.Point3.Point, surface.InnerTriangle.Point3);
-                        }
 
-                        obj.Surfaces.Add(surface);
+                            obj.Surfaces.Add(surface);
+                            surfaceIndex++;
+                        }
                     }
                 }
             }
