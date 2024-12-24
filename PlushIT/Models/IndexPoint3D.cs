@@ -8,7 +8,7 @@ namespace PlushIT.Models
         public int OuterPositionNumber { get; set; } = outerPositionNumber;
         public Point3D Point { get; set; } = point;
 
-        public List<Surface3D> ConnectedTriangles { get; set; } = [];
+        public List<Surface3D> ConnectedSurfaces { get; set; } = [];
 
     }
 }

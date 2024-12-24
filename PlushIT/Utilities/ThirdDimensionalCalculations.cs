@@ -4,6 +4,21 @@ namespace PlushIT.Utilities
 {
     public static class ThirdDimensionalCalculations
     {
+        public static Vector3D GetUnitVector(Vector3D vect)
+        {
+            return vect / GetVectorMagnitude(vect);
+        }
+        public static Vector3D GetTriangleNormal(Point3D pt1, Point3D pt2, Point3D pt3)
+        {
+            Vector3D u = pt2 - pt1;
+            Vector3D v = pt3 - pt1;
+
+            double x = (u.Y * v.Z) - (u.Z * v.Y);
+            double y = (u.Z * v.X) - (u.X * v.Z);
+            double z = (u.X * v.Y) - (u.Y * v.X);
+
+            return new Vector3D(x, y, z);
+        }
         public static double DistanceFromPoint1ToLine23(Point3D pt1, Point3D pt2, Point3D pt3)
         {
             Vector3D d = (pt3 - pt2) / DistanceBetweenPoints(pt3, pt2);

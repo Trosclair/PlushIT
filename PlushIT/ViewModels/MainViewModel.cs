@@ -1,16 +1,6 @@
-﻿using HelixToolkit.Wpf;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using PlushIT.Models;
 using PlushIT.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
@@ -40,44 +30,45 @@ namespace PlushIT.ViewModels
             {
                 Model = OBJModel3D.Read(ofd.FileName);
 
-                foreach (IndexPoint3D pt in Model.AllPoints.Values.OrderBy(x => x.OuterPositionNumber))
+                foreach (IndexPoint3D pt in Model.OuterTrianglePoints.Values.OrderBy(x => x.OuterPositionNumber))
                 {
                     geometryLines.Positions.Add(pt.Point);
                 }
 
                 foreach (Surface3D surface in Model.Surfaces)
                 {
-                    geometryTriangles.Positions.Add(surface.InnerTriangle!.Point1.Point);
-                    geometryTriangles.Positions.Add(surface.InnerTriangle!.Point2.Point);
-                    geometryTriangles.Positions.Add(surface.InnerTriangle!.Point3.Point);
+                    if (surface.InnerUpperTriangle is not null && surface.InnerLowerTriangle is not null)
+                    {
+                        geometryTriangles.Positions.Add(surface.InnerUpperTriangle.Point1.Point);
+                        geometryTriangles.Positions.Add(surface.InnerUpperTriangle.Point2.Point);
+                        geometryTriangles.Positions.Add(surface.InnerUpperTriangle.Point3.Point);
 
-                    geometryTriangles.TriangleIndices.Add(surface.InnerTriangle.Point1.InnerPositionNumber);
-                    geometryTriangles.TriangleIndices.Add(surface.InnerTriangle.Point2.InnerPositionNumber);
-                    geometryTriangles.TriangleIndices.Add(surface.InnerTriangle.Point3.InnerPositionNumber);
+                        geometryTriangles.Positions.Add(surface.InnerLowerTriangle.Point1.Point);
+                        geometryTriangles.Positions.Add(surface.InnerLowerTriangle.Point2.Point);
+                        geometryTriangles.Positions.Add(surface.InnerLowerTriangle.Point3.Point);
+
+                        geometryTriangles.TriangleIndices.Add(surface.InnerUpperTriangle.Point1.InnerPositionNumber);
+                        geometryTriangles.TriangleIndices.Add(surface.InnerUpperTriangle.Point2.InnerPositionNumber);
+                        geometryTriangles.TriangleIndices.Add(surface.InnerUpperTriangle.Point3.InnerPositionNumber);
+
+                        geometryTriangles.TriangleIndices.Add(surface.InnerLowerTriangle.Point1.InnerPositionNumber);
+                        geometryTriangles.TriangleIndices.Add(surface.InnerLowerTriangle.Point2.InnerPositionNumber);
+                        geometryTriangles.TriangleIndices.Add(surface.InnerLowerTriangle.Point3.InnerPositionNumber);
+                    }
+                    else if (surface.InnerTriangle is not null)
+                    {
+                        geometryTriangles.Positions.Add(surface.InnerTriangle.Point1.Point);
+                        geometryTriangles.Positions.Add(surface.InnerTriangle.Point2.Point);
+                        geometryTriangles.Positions.Add(surface.InnerTriangle.Point3.Point);
+
+                        geometryTriangles.TriangleIndices.Add(surface.InnerTriangle.Point1.InnerPositionNumber);
+                        geometryTriangles.TriangleIndices.Add(surface.InnerTriangle.Point2.InnerPositionNumber);
+                        geometryTriangles.TriangleIndices.Add(surface.InnerTriangle.Point3.InnerPositionNumber);
+                    }
 
                     geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point1.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point1.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point2.OuterPositionNumber);
-
-                    geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point1.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point2.OuterPositionNumber);
                     geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point2.OuterPositionNumber);
-
-                    geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point2.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point2.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point3.OuterPositionNumber);
-
-                    geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point2.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point3.OuterPositionNumber);
                     geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point3.OuterPositionNumber);
-
-                    geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point3.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point3.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point1.OuterPositionNumber);
-
-                    geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point3.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.InnerTriangle.Point1.OuterPositionNumber);
-                    geometryLines.TriangleIndices.Add(surface.OuterTriangle.Point1.OuterPositionNumber);
                 }
 
                 triangleContent.BackMaterial = new DiffuseMaterial(Brushes.Gray);
@@ -93,8 +84,8 @@ namespace PlushIT.ViewModels
                 hoverContent.Geometry = geometryHover;
                 geometryHover.TriangleIndices = [0, 1, 2, 0, 2, 3, 3, 4, 5, 3, 5, 0];
 
-                MVGroup.Children.Add(triangleContent);
                 MVGroup.Children.Add(lineContent);
+                MVGroup.Children.Add(triangleContent);
                 LinesGroup.Children.Add(hoverContent);
             }
         }
@@ -113,12 +104,12 @@ namespace PlushIT.ViewModels
                     Surface3D? surface = null;
                     if (Model.AllPoints.TryGetValue(pos1, out IndexPoint3D? pt) && pt is not null)
                     {
-                        surface = pt.ConnectedTriangles.FirstOrDefault(x => x.IsSuppliedPointAVertice(pos2) && x.IsSuppliedPointAVertice(pos3));
+                        surface = pt.ConnectedSurfaces.FirstOrDefault(x => x.IsSuppliedPointAVertice(pos2) && x.IsSuppliedPointAVertice(pos3));
                     }
 
                     if (surface?.FindClosestEdge(hitTestResult.PointHit) is Edge3D edge1)
                     {
-                        Surface3D? otherSurface = edge1.StartPoint.ConnectedTriangles.Intersect(edge1.EndPoint.ConnectedTriangles).SingleOrDefault(x => x.SurfaceIndex != surface.SurfaceIndex);
+                        Surface3D? otherSurface = edge1.StartPoint.ConnectedSurfaces.Intersect(edge1.EndPoint.ConnectedSurfaces).SingleOrDefault(x => x.SurfaceIndex != surface.SurfaceIndex);
 
                         if (otherSurface?.GetSharedEdge(edge1) is Edge3D edge2)
                         {

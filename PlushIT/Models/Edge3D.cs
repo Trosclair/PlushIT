@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,9 +15,6 @@ namespace PlushIT.Models
         public IndexPoint3D Point1 { get; set; }
         public IndexPoint3D Point2 { get; set; }
 
-        public Triangle3D Triangle1 { get; set; }
-        public Triangle3D Triangle2 { get; set; }
-
         public double Length { get; set; }
 
         public Edge3D(IndexPoint3D pt1, IndexPoint3D pt2, IndexPoint3D pt3, IndexPoint3D pt4)
@@ -27,9 +25,6 @@ namespace PlushIT.Models
             EndPoint = pt4;
 
             Length = ThirdDimensionalCalculations.DistanceBetweenPoints(StartPoint.Point, EndPoint.Point);
-
-            Triangle1 = new(pt1, pt2, pt3);
-            Triangle2 = new(pt1, pt3, pt4);
         }
 
         public bool IsEdgeShared(Edge3D? edge)
