@@ -40,29 +40,25 @@ namespace PlushIT.Views
 
         private void HelixViewport3D_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Point point = e.GetPosition((IInputElement)sender);
-
-            RayMeshGeometry3DHitTestResult? hitTestResult = CastRaySingle(point, (HelixViewport3D)sender);
-
-            if (hitTestResult is not null)
+            if (CastRaySingle(e.GetPosition((IInputElement)sender), (HelixViewport3D)sender) is RayMeshGeometry3DHitTestResult hitTestResult)
             {
-                MainViewModel.SelectVertexFromHitTest(hitTestResult);
+                MainViewModel.MouseLeftDown(hitTestResult, e);
             }
         }
 
         private void HelixViewport3D_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.MouseDevice.LeftButton != MouseButtonState.Pressed)
+            if (CastRaySingle(e.GetPosition((IInputElement)sender), (HelixViewport3D)sender) is RayMeshGeometry3DHitTestResult hitTestResult)
             {
+                MainViewModel.MouseMove(hitTestResult, e);
+            }
+        }
 
-                Point point = e.GetPosition((IInputElement)sender);
-
-                RayMeshGeometry3DHitTestResult? hitTestResult = CastRaySingle(point, (HelixViewport3D)sender);
-
-                if (hitTestResult is not null)
-                {
-                    MainViewModel.HighlightVertexFromHitTest(hitTestResult);
-                }
+        private void HelixViewport3D_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (CastRaySingle(e.GetPosition((IInputElement)sender), (HelixViewport3D)sender) is RayMeshGeometry3DHitTestResult hitTestResult)
+            {
+                MainViewModel.MouseLeftUp(hitTestResult, e);
             }
         }
 

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Win32;
+using PlushIT.Enums;
 using PlushIT.Models;
 using PlushIT.Utilities;
 using System.Diagnostics;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
@@ -11,21 +13,26 @@ namespace PlushIT.ViewModels
     public class MainViewModel : ObservableObject
     {
         private Point3D cameraPosition = new(-20, 100, 50);
+        private Tool selectedTool = Tool.MultiEdge;
+        private readonly Dictionary<int, Line3D> multiselectedLines = [];
+        private Line3D lastEdgeSelected = null;
 
         private readonly GeometryModel3D triangleContent = new();
         private readonly GeometryModel3D lineContent = new();
         private readonly GeometryModel3D hoverContent = new();
         private readonly GeometryModel3D selectedLinesContent = new();
+        private readonly GeometryModel3D multiselectedLinesContent = new();
 
         private readonly MeshGeometry3D geometryTriangles = new();
         private readonly MeshGeometry3D geometryLines = new();
         private readonly MeshGeometry3D geometryHover = new();
         private readonly MeshGeometry3D geometrySelectedLines = new();
+        private readonly MeshGeometry3D geometryMultiSelectedLines = new();
 
         public Point3D CameraPosition { get => cameraPosition; set { cameraPosition = value; OnPropertyChanged(nameof(CameraPosition)); } }
+        public Tool SelectedTool { get => selectedTool; set { selectedTool = value; OnPropertyChanged(nameof(SelectedTool)); } }
 
         public Model3DGroup MVGroup { get; set; } = new();
-        public Model3DGroup LinesGroup { get; set; } = new();
         public OBJModel3D? Model { get; set; }
 
         public Dictionary<int, Line3D> SelectedLines { get; } = [];
@@ -90,28 +97,99 @@ namespace PlushIT.ViewModels
                 selectedLinesContent.Material = new DiffuseMaterial(Brushes.Green);
                 selectedLinesContent.Geometry = geometrySelectedLines;
 
+                multiselectedLinesContent.Geometry = geometryMultiSelectedLines;
+
                 hoverContent.Geometry = geometryHover;
 
                 MVGroup.Children.Add(lineContent);
                 MVGroup.Children.Add(triangleContent);
                 MVGroup.Children.Add(hoverContent);
                 MVGroup.Children.Add(selectedLinesContent);
+                MVGroup.Children.Add(multiselectedLinesContent);
             }
         }
 
-        public void SelectVertexFromHitTest(RayMeshGeometry3DHitTestResult hitTestResult)
+        public void MouseLeftDown(RayMeshGeometry3DHitTestResult hitTestResult, MouseEventArgs e)
         {
-            ApplyFunctionToNearestEdge(hitTestResult, SelectVertex);
+            if (SelectedTool == Tool.SingleEdge)
+            {
+                ApplyFunctionToNearestEdge(hitTestResult, SelectVertex);
+            }
         }
 
-        public void HighlightVertexFromHitTest(RayMeshGeometry3DHitTestResult hitTestResult)
+        public void MouseLeftUp(RayMeshGeometry3DHitTestResult hitTestResult, MouseEventArgs e)
         {
-            ApplyFunctionToNearestEdge(hitTestResult, (edge) => RenderHoverLine(SelectedLines.ContainsKey(edge.LineIndex), edge));
+            if (SelectedTool == Tool.MultiEdge)
+            {
+                bool isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
+                foreach (Line3D lineToDraw in multiselectedLines.Values)
+                {
+                    if (isCtrlPressed)
+                    {
+                        SelectedLines.Remove(lineToDraw.LineIndex);
+                        lineToDraw.UnRender(geometrySelectedLines);
+                    }
+                    else
+                    {
+                        if (SelectedLines.TryAdd(lineToDraw.LineIndex, lineToDraw))
+                        {
+                            lineToDraw.Render(geometrySelectedLines);
+                        }
+                    }
+                    multiselectedLines.Remove(lineToDraw.LineIndex);
+                    lineToDraw.UnRender(geometryMultiSelectedLines);
+                }
+            }
         }
+
+        public void MouseMove(RayMeshGeometry3DHitTestResult hitTestResult, MouseEventArgs e)
+        {
+            if (e.MouseDevice.LeftButton == MouseButtonState.Pressed)
+            {
+                geometryHover.Positions.Clear();
+                geometryHover.TriangleIndices.Clear();
+
+                ApplyFunctionToNearestEdge(hitTestResult, MouseMoveWhileLeftButtonDown);
+            }
+            else
+            {
+                ApplyFunctionToNearestEdge(hitTestResult, (edge) => RenderHoverLine(SelectedLines.ContainsKey(edge.LineIndex), edge));
+            }
+        }
+
+        private void MouseMoveWhileLeftButtonDown(Line3D line)
+        {
+            if (SelectedTool == Tool.MultiEdge)
+            {
+                bool isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
+                multiselectedLinesContent.BackMaterial = new DiffuseMaterial(isCtrlPressed ? Brushes.Red : Brushes.Aqua);
+                multiselectedLinesContent.Material = new DiffuseMaterial(isCtrlPressed ? Brushes.Red : Brushes.Aqua);
+
+                if (lastEdgeSelected is null || lastEdgeSelected.LineIndex != line.LineIndex)
+                {
+                    if (multiselectedLines.TryAdd(line.LineIndex, line))
+                    {
+                        line.Render(geometryMultiSelectedLines);
+                    }
+                    else
+                    {
+                        multiselectedLines.Remove(line.LineIndex);
+                        line.UnRender(geometryMultiSelectedLines);
+                    }
+                }
+                lastEdgeSelected = line;
+            }
+        }
+
 
         public void ApplyFunctionToNearestEdge(RayMeshGeometry3DHitTestResult hitTestResult, Action<Line3D> act)
         {
-            if (Model is not null)
+            if (Model is not null && 
+                hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex1 && 
+                hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex2 &&
+                hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex3)
             {
                 Point3D[] pts =
                     [hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex1],

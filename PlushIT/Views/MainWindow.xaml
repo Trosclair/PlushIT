@@ -8,10 +8,10 @@
         Title="MainWindow" Height="450" Width="800" >
     <Grid>
 
-        <hx:HelixViewport3D ShowCameraInfo="True" ClipToBounds="False" RenderOptions.CachingHint="Cache" RenderOptions.EdgeMode="Aliased" MouseLeftButtonDown="HelixViewport3D_MouseLeftButtonDown" MouseMove="HelixViewport3D_MouseMove">
+        <hx:HelixViewport3D ShowCameraInfo="True" ClipToBounds="False" RenderOptions.CachingHint="Cache" RenderOptions.EdgeMode="Aliased" 
+            MouseLeftButtonDown="HelixViewport3D_MouseLeftButtonDown" MouseLeftButtonUp="HelixViewport3D_MouseLeftButtonUp" MouseMove="HelixViewport3D_MouseMove">
             <hx:DefaultLights/>
             <ModelVisual3D Content="{Binding MVGroup}"/>
-            <ModelVisual3D Content="{Binding LinesGroup}"/>
         </hx:HelixViewport3D>
     </Grid>
 </Window>
