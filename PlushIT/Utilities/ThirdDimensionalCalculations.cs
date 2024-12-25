@@ -21,7 +21,14 @@ namespace PlushIT.Utilities
             return new Vector3D(x, y, z);
         }
 
-        public static double DistanceFromPoint1ToLineBetweenPoints2And3(Point3D pt1, Point3D pt2, Point3D pt3)
+        /// <summary>
+        /// Distance from pt1 to line segment pt2/pt3.
+        /// </summary>
+        /// <param name="pt1"></param>
+        /// <param name="pt2"></param>
+        /// <param name="pt3"></param>
+        /// <returns></returns>
+        public static double DistanceFromPointToLineSegment(Point3D pt1, Point3D pt2, Point3D pt3)
         {
             Vector3D d = (pt3 - pt2) / DistanceBetweenPoints(pt3, pt2);
             Vector3D vec12 = pt1 - pt2;
@@ -37,6 +44,23 @@ namespace PlushIT.Utilities
             {
                 return Math.Min(DistanceBetweenPoints(pt1, pt2), DistanceBetweenPoints(pt1, pt3));
             }
+            return DistanceBetweenPoints(p, pt1);
+        }
+
+        /// <summary>
+        /// Only use this method if you are 100% sure pt1 is between pt2 and pt3. 
+        /// or if you need the distance from a point to a line and not a line segment
+        /// </summary>
+        /// <param name="pt1"></param>
+        /// <param name="pt2"></param>
+        /// <param name="pt3"></param>
+        /// <returns></returns>
+        public static double DistanceFromPointToLine(Point3D pt1, Point3D pt2, Point3D pt3)
+        {
+            Vector3D d = (pt3 - pt2) / DistanceBetweenPoints(pt3, pt2);
+            Vector3D vec12 = pt1 - pt2;
+            double t = Vector3D.DotProduct(vec12, d);
+            Point3D p = pt2 + (t * d);
             return DistanceBetweenPoints(p, pt1);
         }
 

@@ -128,85 +128,84 @@ namespace PlushIT.ViewModels
                     }
                 }
 
-                //IEnumerable<Line3D> totalPointsWithDuplicates = points.SelectMany(x => x.ConnectedLines);
-                //IEnumerable<IGrouping<int, Line3D>> commonLinesBetweenThePoints = totalPointsWithDuplicates.GroupBy(x => x.LineIndex);
-                //int maxOccurencesOfALine = commonLinesBetweenThePoints.Max(x => x.Count());
-                //IEnumerable<IGrouping<int, Line3D>> filteredGroupsOfLines = commonLinesBetweenThePoints.Where(x => x.Count() == maxOccurencesOfALine);
-                //IEnumerable<Line3D> filteredLines = filteredGroupsOfLines.Select(x => x.FirstOrDefault()).OfType<Line3D>();
-
-                //IEnumerable<Line3D> filteredLinesButUnreadable = points
-                //    .SelectMany(x => x.ConnectedLines)
-                //    .GroupBy(x => x.LineIndex)
-                //    .Where(x => x.Count() == points.SelectMany(y => y.ConnectedLines).GroupBy(y => y.LineIndex).Max(y => y.Count()))
-                //    .Select(x => x.FirstOrDefault())
-                //    .OfType<Line3D>();
-
-                //IEnumerable<Surface3D> totalSurfacesWithDuplicates = points.SelectMany(x => x.ConnectedSurfaces);
-                //IEnumerable<IGrouping<int, Surface3D>> groupsOfTheSameSurface = totalSurfacesWithDuplicates.GroupBy(x => x.SurfaceIndex);
-                //int maxOccurencesOfASurface = groupsOfTheSameSurface.Max(x => x.Count());
-                //IEnumerable<IGrouping<int, Surface3D>> filteredGroupsOfSurfaces = groupsOfTheSameSurface.Where(x => x.Count() == maxOccurencesOfASurface);
-                //IEnumerable<Surface3D> filteredSurfaces = filteredGroupsOfSurfaces.Select(x => x.FirstOrDefault()).OfType<Surface3D>();
-                //IEnumerable<Line3D?[]> totalPointsWithNullsAndDuplicates = filteredSurfaces.Select(x => new Line3D?[] { x.Edge12, x.Edge23, x.Edge31 });
-                //IEnumerable<Line3D> totalPointsWithDuplicates = totalPointsWithNullsAndDuplicates.SelectMany(x => x).OfType<Line3D>();
-                //IEnumerable<IGrouping<int, Line3D>> commonLinesBetweenThePoints = totalPointsWithDuplicates.GroupBy(x => x.LineIndex);
-                //int maxOccurencesOfALine = commonLinesBetweenThePoints.Max(x => x.Count());
-                //IEnumerable<IGrouping<int, Line3D>> filteredGroupsOfLines = commonLinesBetweenThePoints.Where(x => x.Count() == maxOccurencesOfALine);
-                //IEnumerable<Line3D> filteredLines = filteredGroupsOfLines.Select(x => x.FirstOrDefault()).OfType<Line3D>();
-
-                Line3D? closestLine = null;
-
                 if (points.Count == 1) // User moused over the worst part of a line... Greaaaaat Now I have to do math...
                 {
-                    closestLine = points[0].ConnectedLines.MinBy(x => 
-                        ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(hitTestResult.PointHit, x.StartPoint.Point, x.EndPoint.Point));
+                    Line3D? line = points[0].ConnectedLines.MinBy(x => 
+                        ThirdDimensionalCalculations.DistanceFromPointToLineSegment(hitTestResult.PointHit, x.StartPoint.Point, x.EndPoint.Point));
+
+                    if (line is not null)
+                    {
+                        act(line);
+                    }
                 }
                 else if (points.Count == 2) // Best case senario... User has basically given us the line for free by mousing over the correct part of the 'line'.
                 {
-                    closestLine = points[0].ConnectedLines
-                        .IntersectBy(points[1].ConnectedLines.Select(x => x.LineIndex), x => x.LineIndex)
-                        .SingleOrDefault(); // If you get more than one line here then we have broken some fundamental law of geometry since a line can't have more than one edge.                      
+                    for (int i = 0; i < points[0].ConnectedLines.Count; i++)
+                    {
+                        for (int j = 0; j < points[1].ConnectedLines.Count; j++)
+                        {
+                            if (points[0].ConnectedLines[i].LineIndex == points[1].ConnectedLines[j].LineIndex)
+                            {
+                                act(points[0].ConnectedLines[i]);
+                                return;
+                            }
+                        }
+                    }                     
                 }
                 else if (points.Count == 3) // User is over the inside of the triangle, so now I get to do math again. Worst case senario.
                 {
-                    Surface3D? triangle = points
-                        .SelectMany(x => x.ConnectedSurfaces)   // Flatten the list lists of triangles that these points are connected to... We are counting on there being duplicates here.
-                        .GroupBy(x => x.SurfaceIndex)           // Group em by their unique index value assigned at birth.
-                        .Where(x => x.Count() == 3)             // If a triangle shows up 3 times then it is because it is connected to all 3 points. Ladies and gentlemen... we got em. maybe.
-                        .FirstOrDefault()?                      // There should only be one group of three if there is one.
-                        .FirstOrDefault();                      // All 3 triangles are the same reference, so just snag the first one. You should be able to use just .Single, but I don't trust my own logic.
+                    Surface3D? triangle = null;
+                    Dictionary<int, int> surfaceIndexesToOccurences = [];
+                    int dictIndex, i;
 
-                    if (triangle is not null &&         
-                        triangle.Edge12 is not null &&  // I gotta null check the edges because they are constructed after the containing triangle because I thought it'd be
-                        triangle.Edge23 is not null &&  // helpful to have bordering triangle references in the edge themselves, but I just checked and I don't even use em.
-                        triangle.Edge31 is not null)
+                    for (i = 0; i < points[0].ConnectedSurfaces.Count; i++)
                     {
-                        // use the location of where the cursor touched the triangle and get the distances from each point.
-                        // The function that calculates the distances does a projection of the cursor point onto the line.
-                        // I found this sucks because if there is not a perpendicular line between pt1 and the line then you
-                        // have to take the nearest of the two points. The computation is somewhat expensive and annoying to debug.
-                        double distToEdge1 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(hitTestResult.PointHit, triangle.Edge12.StartPoint.Point, triangle.Edge12.EndPoint.Point);
-                        double distToEdge2 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(hitTestResult.PointHit, triangle.Edge23.StartPoint.Point, triangle.Edge23.EndPoint.Point);
-                        double distToEdge3 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(hitTestResult.PointHit, triangle.Edge31.StartPoint.Point, triangle.Edge31.EndPoint.Point);
+                        surfaceIndexesToOccurences.Add(points[0].ConnectedSurfaces[i].SurfaceIndex, 1);
+                    }
 
-                        //Find the closest edge.
-                        if (distToEdge1 < distToEdge2 && distToEdge1 < distToEdge3)
+                    for (i = 0; i < points[1].ConnectedSurfaces.Count; i++)
+                    {
+                        dictIndex = points[1].ConnectedSurfaces[i].SurfaceIndex;
+                        if (surfaceIndexesToOccurences.ContainsKey(dictIndex))
                         {
-                            closestLine = triangle.Edge12;
-                        }
-                        else if (distToEdge2 < distToEdge3 && distToEdge2 < distToEdge1)
-                        {
-                            closestLine = triangle.Edge23;
-                        }
-                        else
-                        {
-                            closestLine = triangle.Edge31;
+                            surfaceIndexesToOccurences[dictIndex]++;
                         }
                     }
-                }
 
-                if (closestLine is not null)
-                {
-                    act(closestLine);
+                    for (i = 0; i < points[2].ConnectedSurfaces.Count; i++)
+                    {
+                        if (surfaceIndexesToOccurences.TryGetValue(points[2].ConnectedSurfaces[i].SurfaceIndex, out int si) && si == 2)
+                        {
+                            triangle = points[2].ConnectedSurfaces[i];
+                            if (triangle.Edge12 is not null &&  // I gotta null check the edges because they are constructed after the containing triangle because I thought it'd be
+                                triangle.Edge23 is not null &&  // helpful to have bordering triangle references in the edge themselves, but I just checked and I don't even use em.
+                                triangle.Edge31 is not null)
+                            {
+                                // use the location of where the cursor touched the triangle and get the distances from each point.
+                                // The function that calculates the distances does a projection of the cursor point onto the line.
+                                // I found this sucks because if there is not a perpendicular line between pt1 and the line then you
+                                // have to take the nearest of the two points. The computation is somewhat expensive and annoying to debug.
+                                double distToEdge1 = ThirdDimensionalCalculations.DistanceFromPointToLine(hitTestResult.PointHit, triangle.Edge12.StartPoint.Point, triangle.Edge12.EndPoint.Point);
+                                double distToEdge2 = ThirdDimensionalCalculations.DistanceFromPointToLine(hitTestResult.PointHit, triangle.Edge23.StartPoint.Point, triangle.Edge23.EndPoint.Point);
+                                double distToEdge3 = ThirdDimensionalCalculations.DistanceFromPointToLine(hitTestResult.PointHit, triangle.Edge31.StartPoint.Point, triangle.Edge31.EndPoint.Point);
+
+                                //Find the closest edge.
+                                if (distToEdge1 < distToEdge2 && distToEdge1 < distToEdge3)
+                                {
+                                    act(triangle.Edge12);
+                                }
+                                else if (distToEdge2 < distToEdge3 && distToEdge2 < distToEdge1)
+                                {
+                                    act(triangle.Edge23);
+                                }
+                                else
+                                {
+                                    act(triangle.Edge31);
+                                }
+                            }
+                            return;
+                        }
+                    }
                 }
             }
         }

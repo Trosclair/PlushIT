@@ -8,7 +8,7 @@ namespace PlushIT.Models
     {
         private readonly Point3D[] pts, ptsHover;
         private readonly int[] unitIndicies;
-        private readonly Vector3D zeroVector;
+        private static readonly Vector3D zeroVector = new(0, 0, 0);
 
         public IndexPoint3D StartPoint { get; set; }
         public IndexPoint3D Point1 { get; set; }

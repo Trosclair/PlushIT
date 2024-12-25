@@ -88,7 +88,7 @@ namespace PlushIT.Models
             {
                 if (normal.X != 0D || normal.Y != 0D || normal.Z != 0D)
                 {
-                    DisplayOffset = ThirdDimensionalCalculations.GetUnitVector(normal) * .001;
+                    DisplayOffset = ThirdDimensionalCalculations. GetUnitVector(normal) * .001;
 
                     InnerUpperTriangle = new(new(point1 + DisplayOffset), new(point2 + DisplayOffset), new(point3 + DisplayOffset));
                     InnerLowerTriangle = new(new(point1 - DisplayOffset), new(point2 - DisplayOffset), new(point3 - DisplayOffset));
@@ -101,26 +101,6 @@ namespace PlushIT.Models
                     InnerLowerTriangle.Point2.ConnectedSurfaces.Add(this);
                     InnerLowerTriangle.Point3.ConnectedSurfaces.Add(this);
                 }
-            }
-        }
-
-        public Line3D? FindClosestEdge(Point3D touchPoint)
-        {
-            double distTo12 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(touchPoint, OuterTriangle.Point1.Point, OuterTriangle.Point2.Point);
-            double distTo23 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(touchPoint, OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
-            double distTo31 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(touchPoint, OuterTriangle.Point3.Point, OuterTriangle.Point1.Point);
-
-            if (distTo12 < distTo23 && distTo12 < distTo31)
-            {
-                return Edge12;
-            }
-            else if (distTo23 < distTo12 && distTo23 < distTo31)
-            {
-                return Edge23;
-            }
-            else
-            {
-                return Edge31;
             }
         }
 
@@ -146,14 +126,6 @@ namespace PlushIT.Models
             }
 
             return null;
-        }
-
-        public bool IsSuppliedPointAVertice(Point3D point)
-        {
-            return OuterTriangle.IsPointAVertice(point) ||
-                (InnerUpperTriangle is not null && InnerUpperTriangle.IsPointAVertice(point)) ||
-                (InnerLowerTriangle is not null && InnerLowerTriangle.IsPointAVertice(point)) ||
-                (InnerTriangle is not null && InnerTriangle.IsPointAVertice(point));
         }
     }
 }
