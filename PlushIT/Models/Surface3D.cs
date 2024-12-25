@@ -90,23 +90,8 @@ namespace PlushIT.Models
                 {
                     DisplayOffset = ThirdDimensionalCalculations.GetUnitVector(normal) * .001;
 
-                    Point3D point4 = new(
-                        innerEdgePoint12.X + innerEdgePoint13.X - innerEdgePoint23.X,
-                        innerEdgePoint12.Y + innerEdgePoint13.Y - innerEdgePoint23.Y,
-                        innerEdgePoint12.Z + innerEdgePoint13.Z - innerEdgePoint23.Z);
-
-                    Point3D point5 = new(
-                        innerEdgePoint12.X - innerEdgePoint13.X + innerEdgePoint23.X,
-                        innerEdgePoint12.Y - innerEdgePoint13.Y + innerEdgePoint23.Y,
-                        innerEdgePoint12.Z - innerEdgePoint13.Z + innerEdgePoint23.Z);
-
-                    Point3D point6 = new(
-                        innerEdgePoint13.X - innerEdgePoint12.X + innerEdgePoint23.X,
-                        innerEdgePoint13.Y - innerEdgePoint12.Y + innerEdgePoint23.Y,
-                        innerEdgePoint13.Z - innerEdgePoint12.Z + innerEdgePoint23.Z);
-
-                    InnerUpperTriangle = new(new(point4 + DisplayOffset), new(point5 + DisplayOffset), new(point6 + DisplayOffset));
-                    InnerLowerTriangle = new(new(point4 - DisplayOffset), new(point5 - DisplayOffset), new(point6 - DisplayOffset));
+                    InnerUpperTriangle = new(new(point1 + DisplayOffset), new(point2 + DisplayOffset), new(point3 + DisplayOffset));
+                    InnerLowerTriangle = new(new(point1 - DisplayOffset), new(point2 - DisplayOffset), new(point3 - DisplayOffset));
 
                     InnerUpperTriangle.Point1.ConnectedSurfaces.Add(this);
                     InnerUpperTriangle.Point2.ConnectedSurfaces.Add(this);
@@ -121,9 +106,9 @@ namespace PlushIT.Models
 
         public Line3D? FindClosestEdge(Point3D touchPoint)
         {
-            double distTo12 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point1.Point, OuterTriangle.Point2.Point);
-            double distTo23 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
-            double distTo31 = ThirdDimensionalCalculations.DistanceFromPoint1ToLine23(touchPoint, OuterTriangle.Point3.Point, OuterTriangle.Point1.Point);
+            double distTo12 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(touchPoint, OuterTriangle.Point1.Point, OuterTriangle.Point2.Point);
+            double distTo23 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(touchPoint, OuterTriangle.Point2.Point, OuterTriangle.Point3.Point);
+            double distTo31 = ThirdDimensionalCalculations.DistanceFromPoint1ToLineBetweenPoints2And3(touchPoint, OuterTriangle.Point3.Point, OuterTriangle.Point1.Point);
 
             if (distTo12 < distTo23 && distTo12 < distTo31)
             {

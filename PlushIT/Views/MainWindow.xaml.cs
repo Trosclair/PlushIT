@@ -42,7 +42,12 @@ namespace PlushIT.Views
         {
             Point point = e.GetPosition((IInputElement)sender);
 
-            List<RayMeshGeometry3DHitTestResult> s = CastRay(point, (HelixViewport3D)sender);
+            RayMeshGeometry3DHitTestResult? hitTestResult = CastRaySingle(point, (HelixViewport3D)sender);
+
+            if (hitTestResult is not null)
+            {
+                MainViewModel.SelectVertexFromHitTest(hitTestResult);
+            }
         }
 
         private void HelixViewport3D_MouseMove(object sender, MouseEventArgs e)
@@ -52,11 +57,11 @@ namespace PlushIT.Views
 
                 Point point = e.GetPosition((IInputElement)sender);
 
-                RayMeshGeometry3DHitTestResult? s = CastRay(point, (HelixViewport3D)sender).FirstOrDefault();
+                RayMeshGeometry3DHitTestResult? hitTestResult = CastRaySingle(point, (HelixViewport3D)sender);
 
-                if (s is not null)
+                if (hitTestResult is not null)
                 {
-                    MainViewModel.HighlightVertexFromHitTest(s);
+                    MainViewModel.HighlightVertexFromHitTest(hitTestResult);
                 }
             }
         }
@@ -84,6 +89,32 @@ namespace PlushIT.Views
 
             //  Exit Function
             return retVal;
+        }
+
+        public static RayMeshGeometry3DHitTestResult? CastRaySingle(Point clickPoint, HelixViewport3D viewPort, IEnumerable<Visual3D>? ignoreVisuals = null)
+        {
+            RayMeshGeometry3DHitTestResult? ret = null;
+
+            //  This gets called every time there is a hit
+            HitTestResultBehavior resultCallback(HitTestResult result)
+            {
+                if (result is RayMeshGeometry3DHitTestResult resultCast)       //  It could also be a RayHitTestResult, which isn't as exact as RayMeshGeometry3DHitTestResult
+                {
+                    if (ignoreVisuals == null || !ignoreVisuals.Any(o => o == resultCast.VisualHit))
+                    {
+                        ret = resultCast;
+                        return HitTestResultBehavior.Stop;
+                    }
+                }
+
+                return HitTestResultBehavior.Continue;
+            }
+
+            //  Get hits against existing models
+            VisualTreeHelper.HitTest(viewPort, null, resultCallback, new PointHitTestParameters(clickPoint));
+
+
+            return ret;
         }
 
         public static List<RayMeshGeometry3DHitTestResult> CastRay(Point clickPoint, HelixViewport3D viewPort, IEnumerable<Visual3D>? ignoreVisuals = null)

@@ -8,6 +8,7 @@ namespace PlushIT.Utilities
         {
             return vect / GetVectorMagnitude(vect);
         }
+
         public static Vector3D GetTriangleNormal(Point3D pt1, Point3D pt2, Point3D pt3)
         {
             Vector3D u = pt2 - pt1;
@@ -19,12 +20,23 @@ namespace PlushIT.Utilities
 
             return new Vector3D(x, y, z);
         }
-        public static double DistanceFromPoint1ToLine23(Point3D pt1, Point3D pt2, Point3D pt3)
+
+        public static double DistanceFromPoint1ToLineBetweenPoints2And3(Point3D pt1, Point3D pt2, Point3D pt3)
         {
             Vector3D d = (pt3 - pt2) / DistanceBetweenPoints(pt3, pt2);
             Vector3D vec12 = pt1 - pt2;
             double t = Vector3D.DotProduct(vec12, d);
             Point3D p = pt2 + (t * d);
+
+            double magP = GetVectorMagnitude(p);
+            double magPt2 = GetVectorMagnitude(pt2);
+            double magPt3 = GetVectorMagnitude(pt3);
+
+            if ((magP < magPt2 && magP < magPt3) || // Check whether P falls in the bounds of Pt2 and Pt3... If not
+                (magP > magPt2 && magP > magPt3))   // give up and find the closer of Pt2 and Pt3.
+            {
+                return Math.Min(DistanceBetweenPoints(pt1, pt2), DistanceBetweenPoints(pt1, pt3));
+            }
             return DistanceBetweenPoints(p, pt1);
         }
 
@@ -36,9 +48,11 @@ namespace PlushIT.Utilities
             double s = (a + b + c) / 2;
             return Math.Sqrt(s * (s - a) * (s - b) * (s - c));
         }
+
         public static Point3D FindMidPoint(params Point3D[] pts) => new(pts.Sum(x => x.X) / pts.Length, pts.Sum(x => x.Y) / pts.Length, pts.Sum(x => x.Z) / pts.Length);
-        public static Vector3D VectorFromPoints(Point3D pt1, Point3D pt2) => new(pt2.X - pt1.X, pt2.Y - pt1.Y, pt2.Z - pt1.Z);
+        public static Vector3D VectorFromPoints(Point3D pt1, Point3D pt2) => pt2 - pt1;
         public static double DistanceBetweenPoints(Point3D pt1, Point3D pt2) => Math.Sqrt(Math.Pow(pt2.X - pt1.X, 2) + Math.Pow(pt2.Y - pt1.Y, 2) + Math.Pow(pt2.Z - pt1.Z, 2));
         public static double GetVectorMagnitude(Vector3D vec) => Math.Sqrt((vec.X * vec.X) + (vec.Y * vec.Y) + (vec.Z * vec.Z));
+        public static double GetVectorMagnitude(Point3D vec) => Math.Sqrt((vec.X * vec.X) + (vec.Y * vec.Y) + (vec.Z * vec.Z));
     }
 }

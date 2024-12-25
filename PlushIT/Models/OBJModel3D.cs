@@ -49,38 +49,35 @@ namespace PlushIT.Models
                         obj.AllPoints.TryAdd(surface.OuterTriangle.Point2.Point, surface.OuterTriangle.Point2);
                         obj.AllPoints.TryAdd(surface.OuterTriangle.Point3.Point, surface.OuterTriangle.Point3);
 
-                        if (surface.InnerTriangle is not null)
+                        if (surface.InnerUpperTriangle is not null && surface.InnerLowerTriangle is not null)
                         {
-                            if (surface.InnerUpperTriangle is not null && surface.InnerLowerTriangle is not null)
+                            surface.InnerUpperTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerUpperTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerUpperTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
+
+                            surface.InnerLowerTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerLowerTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerLowerTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
+
+                            obj.AllPoints.Add(surface.InnerUpperTriangle.Point1.Point, surface.OuterTriangle.Point1);
+                            obj.AllPoints.Add(surface.InnerUpperTriangle.Point2.Point, surface.OuterTriangle.Point2);
+                            obj.AllPoints.Add(surface.InnerUpperTriangle.Point3.Point, surface.OuterTriangle.Point3);
+                                                                                               
+                            obj.AllPoints.Add(surface.InnerLowerTriangle.Point1.Point, surface.OuterTriangle.Point1);
+                            obj.AllPoints.Add(surface.InnerLowerTriangle.Point2.Point, surface.OuterTriangle.Point2);
+                            obj.AllPoints.Add(surface.InnerLowerTriangle.Point3.Point, surface.OuterTriangle.Point3);
+                        }
+                        else
+                        {
+                            surface.InnerTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
+                            surface.InnerTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
+
+                            if (ThirdDimensionalCalculations.AreaOfTriangle(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point3.Point) > 1E-10)
                             {
-                                surface.InnerUpperTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
-                                surface.InnerUpperTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
-                                surface.InnerUpperTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
-
-                                surface.InnerLowerTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
-                                surface.InnerLowerTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
-                                surface.InnerLowerTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
-
-                                obj.AllPoints.Add(surface.InnerUpperTriangle.Point1.Point, surface.InnerUpperTriangle.Point1);
-                                obj.AllPoints.Add(surface.InnerUpperTriangle.Point2.Point, surface.InnerUpperTriangle.Point2);
-                                obj.AllPoints.Add(surface.InnerUpperTriangle.Point3.Point, surface.InnerUpperTriangle.Point3);
-
-                                obj.AllPoints.TryAdd(surface.InnerLowerTriangle.Point1.Point, surface.InnerLowerTriangle.Point1);
-                                obj.AllPoints.TryAdd(surface.InnerLowerTriangle.Point2.Point, surface.InnerLowerTriangle.Point2);
-                                obj.AllPoints.TryAdd(surface.InnerLowerTriangle.Point3.Point, surface.InnerLowerTriangle.Point3);
-                            }
-                            else
-                            {
-                                surface.InnerTriangle.Point1.InnerPositionNumber = innerPositionIndex++;
-                                surface.InnerTriangle.Point2.InnerPositionNumber = innerPositionIndex++;
-                                surface.InnerTriangle.Point3.InnerPositionNumber = innerPositionIndex++;
-
-                                if (ThirdDimensionalCalculations.AreaOfTriangle(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point3.Point) > 1E-10)
-                                {
-                                    obj.AllPoints.Add(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point1);
-                                    obj.AllPoints.Add(surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point2);
-                                    obj.AllPoints.Add(surface.InnerTriangle.Point3.Point, surface.InnerTriangle.Point3);
-                                }
+                                obj.AllPoints.Add(surface.InnerTriangle.Point1.Point, surface.InnerTriangle.Point1);
+                                obj.AllPoints.Add(surface.InnerTriangle.Point2.Point, surface.InnerTriangle.Point2);
+                                obj.AllPoints.Add(surface.InnerTriangle.Point3.Point, surface.InnerTriangle.Point3);
                             }
                         }
 
@@ -90,6 +87,7 @@ namespace PlushIT.Models
                 }
             }
 
+            int lineIndex = 0;
             foreach (IndexPoint3D pt in obj.OuterTrianglePoints)
             {
                 List<Surface3D> unfinishedSurfaces = [.. pt.ConnectedSurfaces];
@@ -97,7 +95,12 @@ namespace PlushIT.Models
                 {
                     for (int j = i + 1; j < unfinishedSurfaces.Count; j++)
                     {
-                        Line3D.TryCreateLine(unfinishedSurfaces[i], unfinishedSurfaces[j]);
+                        if (Line3D.TryCreateLine(unfinishedSurfaces[i], unfinishedSurfaces[j], lineIndex) is Line3D line)
+                        {
+                            line.StartPoint.ConnectedLines.Add(line);
+                            line.EndPoint.ConnectedLines.Add(line);
+                            lineIndex++;
+                        }
                     }
                 }
             }

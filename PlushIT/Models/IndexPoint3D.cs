@@ -9,5 +9,6 @@ namespace PlushIT.Models
         public Point3D Point { get; set; } = point;
 
         public List<Surface3D> ConnectedSurfaces { get; set; } = [];
+        public List<Line3D> ConnectedLines { get; set; } = [];
     }
 }
