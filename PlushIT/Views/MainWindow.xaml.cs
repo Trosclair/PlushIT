@@ -109,7 +109,6 @@ namespace PlushIT.Views
             //  Get hits against existing models
             VisualTreeHelper.HitTest(viewPort, null, resultCallback, new PointHitTestParameters(clickPoint));
 
-
             return ret;
         }
 

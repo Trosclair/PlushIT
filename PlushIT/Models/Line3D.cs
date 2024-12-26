@@ -22,6 +22,8 @@ namespace PlushIT.Models
 
         public int LineIndex { get; set; }
 
+        public double Length { get; set; }
+
         private Line3D(int lineIndex, IndexPoint3D startPoint, IndexPoint3D point1, IndexPoint3D point2, IndexPoint3D endPoint, 
             IndexPoint3D point3, IndexPoint3D point4, Surface3D surface1, Surface3D surface2)
         {
@@ -37,6 +39,8 @@ namespace PlushIT.Models
 
             Surface1 = surface1;
             Surface2 = surface2;
+
+            Length = ThirdDimensionalCalculations.DistanceBetweenPoints(StartPoint.Point, EndPoint.Point);
 
             if (Surface1.DisplayOffset != zeroVector && Surface2.DisplayOffset != zeroVector)
             {
@@ -96,7 +100,7 @@ namespace PlushIT.Models
 
         public void UnRender(MeshGeometry3D geometry)
         {
-            int lowestTriangleIndicie = 0;
+            int lowestTriangleIndice = 0;
             for (int i = 0; i < geometry.Positions.Count - pts.Length + 1; i++)
             {
                 if (geometry.Positions[i] == pts[0])
@@ -113,7 +117,7 @@ namespace PlushIT.Models
 
                     if (isMatch)
                     {
-                        lowestTriangleIndicie = i;
+                        lowestTriangleIndice = i;
                         for (int j = pts.Length + i - 1; j >= i; j--)
                         {
                             geometry.Positions.RemoveAt(j);
@@ -125,7 +129,7 @@ namespace PlushIT.Models
 
             for (int i = 0; i < geometry.TriangleIndices.Count; i++)
             {
-                if (geometry.TriangleIndices[i] == lowestTriangleIndicie)
+                if (geometry.TriangleIndices[i] == lowestTriangleIndice)
                 {
                     for (int j = 0; j < unitIndicies.Length; j++)
                     {

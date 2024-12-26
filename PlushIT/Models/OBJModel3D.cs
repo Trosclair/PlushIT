@@ -17,7 +17,6 @@ namespace PlushIT.Models
             OBJModel3D obj = new();
             string[] arr = File.ReadAllLines(filename);
             IndexPoint3D[] trianglePoints = new IndexPoint3D[3];
-            int pNumber = 1;
             int surfaceIndex = 0;
             int outerPositionIndex = 0;
             int innerPositionIndex = 0;
@@ -29,10 +28,8 @@ namespace PlushIT.Models
                 {
                     if (data[0] == "v")
                     {
-                        IndexPoint3D pt = new(new(Convert.ToDouble(data[1]), Convert.ToDouble(data[2]), Convert.ToDouble(data[3])));
-                        pt.OuterPositionNumber = outerPositionIndex++;
+                        IndexPoint3D pt = new(new(Convert.ToDouble(data[1]), Convert.ToDouble(data[2]), Convert.ToDouble(data[3])), outerPositionIndex++);
                         obj.OuterTrianglePoints.Add(pt);
-                        pNumber++;
                     }
                     else if (data[0] == "f")
                     {

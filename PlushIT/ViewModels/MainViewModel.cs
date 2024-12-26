@@ -13,21 +13,28 @@ namespace PlushIT.ViewModels
     public class MainViewModel : ObservableObject
     {
         private Point3D cameraPosition = new(-20, 100, 50);
-        private Tool selectedTool = Tool.MultiEdge;
-        private readonly Dictionary<int, Line3D> multiselectedLines = [];
-        private Line3D lastEdgeSelected = null;
+        private Tool selectedTool = Tool.Pen;
+        private readonly Dictionary<int, Line3D> selectedLines = [];
+        private readonly List<IndexPoint3D> pointsCurrentlyBeingSelected = [];
+        private readonly Dictionary<int, Line3D> linesCurrentlyBeingSelected = [];
 
         private readonly GeometryModel3D triangleContent = new();
         private readonly GeometryModel3D lineContent = new();
-        private readonly GeometryModel3D hoverContent = new();
+        private readonly GeometryModel3D hoverEdgeContent = new();
+        private readonly GeometryModel3D hoverPointContent = new();
         private readonly GeometryModel3D selectedLinesContent = new();
-        private readonly GeometryModel3D multiselectedLinesContent = new();
+        private readonly GeometryModel3D multiSelectedLinesContent = new();
+        private readonly GeometryModel3D multiSelectedPointsContent = new();
 
         private readonly MeshGeometry3D geometryTriangles = new();
         private readonly MeshGeometry3D geometryLines = new();
-        private readonly MeshGeometry3D geometryHover = new();
+        private readonly MeshGeometry3D geometryEdgeHover = new();
+        private readonly MeshGeometry3D geometryPointHover = new();
         private readonly MeshGeometry3D geometrySelectedLines = new();
         private readonly MeshGeometry3D geometryMultiSelectedLines = new();
+        private readonly MeshGeometry3D geometryMultiSelectedPoints = new();
+
+        private Line3D? lastEdgeSelected = null;
 
         public Point3D CameraPosition { get => cameraPosition; set { cameraPosition = value; OnPropertyChanged(nameof(CameraPosition)); } }
         public Tool SelectedTool { get => selectedTool; set { selectedTool = value; OnPropertyChanged(nameof(SelectedTool)); } }
@@ -35,7 +42,6 @@ namespace PlushIT.ViewModels
         public Model3DGroup MVGroup { get; set; } = new();
         public OBJModel3D? Model { get; set; }
 
-        public Dictionary<int, Line3D> SelectedLines { get; } = [];
 
         public MainViewModel()
         {
@@ -93,19 +99,23 @@ namespace PlushIT.ViewModels
                 lineContent.Material = new DiffuseMaterial(Brushes.Black);
                 lineContent.Geometry = geometryLines;
 
-                selectedLinesContent.BackMaterial = new DiffuseMaterial(Brushes.Green);
-                selectedLinesContent.Material = new DiffuseMaterial(Brushes.Green);
+                selectedLinesContent.BackMaterial = new DiffuseMaterial(Brushes.LightGreen);
+                selectedLinesContent.Material = new DiffuseMaterial(Brushes.LightGreen);
                 selectedLinesContent.Geometry = geometrySelectedLines;
 
-                multiselectedLinesContent.Geometry = geometryMultiSelectedLines;
+                multiSelectedLinesContent.Geometry = geometryMultiSelectedLines;
+                multiSelectedPointsContent.Geometry = geometryMultiSelectedPoints;
 
-                hoverContent.Geometry = geometryHover;
+                hoverEdgeContent.Geometry = geometryEdgeHover;
+                hoverPointContent.Geometry = geometryPointHover;
 
                 MVGroup.Children.Add(lineContent);
                 MVGroup.Children.Add(triangleContent);
-                MVGroup.Children.Add(hoverContent);
+                MVGroup.Children.Add(hoverEdgeContent);
+                MVGroup.Children.Add(hoverPointContent);
                 MVGroup.Children.Add(selectedLinesContent);
-                MVGroup.Children.Add(multiselectedLinesContent);
+                MVGroup.Children.Add(multiSelectedLinesContent);
+                MVGroup.Children.Add(multiSelectedPointsContent);
             }
         }
 
@@ -113,31 +123,37 @@ namespace PlushIT.ViewModels
         {
             if (SelectedTool == Tool.SingleEdge)
             {
-                ApplyFunctionToNearestEdge(hitTestResult, SelectVertex);
+                ApplyFunctionToNearestEdge(hitTestResult, SelectEdge);
+            }
+            else if (SelectedTool == Tool.Pen)
+            {
+                multiSelectedLinesContent.BackMaterial = new DiffuseMaterial(Brushes.Aqua);
+                multiSelectedLinesContent.Material = new DiffuseMaterial(Brushes.Aqua);
+                ApplyFunctionToNearestPoint(hitTestResult, SelectPoint);
             }
         }
 
         public void MouseLeftUp(RayMeshGeometry3DHitTestResult hitTestResult, MouseEventArgs e)
         {
+            bool isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
             if (SelectedTool == Tool.MultiEdge)
             {
-                bool isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-
-                foreach (Line3D lineToDraw in multiselectedLines.Values)
+                foreach (Line3D lineToDraw in linesCurrentlyBeingSelected.Values)
                 {
                     if (isCtrlPressed)
                     {
-                        SelectedLines.Remove(lineToDraw.LineIndex);
+                        selectedLines.Remove(lineToDraw.LineIndex);
                         lineToDraw.UnRender(geometrySelectedLines);
                     }
                     else
                     {
-                        if (SelectedLines.TryAdd(lineToDraw.LineIndex, lineToDraw))
+                        if (selectedLines.TryAdd(lineToDraw.LineIndex, lineToDraw))
                         {
                             lineToDraw.Render(geometrySelectedLines);
                         }
                     }
-                    multiselectedLines.Remove(lineToDraw.LineIndex);
+                    linesCurrentlyBeingSelected.Remove(lineToDraw.LineIndex);
                     lineToDraw.UnRender(geometryMultiSelectedLines);
                 }
             }
@@ -147,14 +163,21 @@ namespace PlushIT.ViewModels
         {
             if (e.MouseDevice.LeftButton == MouseButtonState.Pressed)
             {
-                geometryHover.Positions.Clear();
-                geometryHover.TriangleIndices.Clear();
+                geometryEdgeHover.Positions.Clear();
+                geometryEdgeHover.TriangleIndices.Clear();
 
                 ApplyFunctionToNearestEdge(hitTestResult, MouseMoveWhileLeftButtonDown);
             }
             else
-            {
-                ApplyFunctionToNearestEdge(hitTestResult, (edge) => RenderHoverLine(SelectedLines.ContainsKey(edge.LineIndex), edge));
+            {   
+                if (SelectedTool == Tool.Pen)
+                {
+                    ApplyFunctionToNearestPoint(hitTestResult, RenderPenHoverPoint);
+                }
+                else
+                {
+                    ApplyFunctionToNearestEdge(hitTestResult, (edge) => RenderHoverLine(selectedLines.ContainsKey(edge.LineIndex), edge));
+                }
             }
         }
 
@@ -164,18 +187,18 @@ namespace PlushIT.ViewModels
             {
                 bool isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
-                multiselectedLinesContent.BackMaterial = new DiffuseMaterial(isCtrlPressed ? Brushes.Red : Brushes.Aqua);
-                multiselectedLinesContent.Material = new DiffuseMaterial(isCtrlPressed ? Brushes.Red : Brushes.Aqua);
+                multiSelectedLinesContent.BackMaterial = new DiffuseMaterial(isCtrlPressed ? Brushes.Red : Brushes.Aqua);
+                multiSelectedLinesContent.Material = new DiffuseMaterial(isCtrlPressed ? Brushes.Red : Brushes.Aqua);
 
                 if (lastEdgeSelected is null || lastEdgeSelected.LineIndex != line.LineIndex)
                 {
-                    if (multiselectedLines.TryAdd(line.LineIndex, line))
+                    if (linesCurrentlyBeingSelected.TryAdd(line.LineIndex, line))
                     {
                         line.Render(geometryMultiSelectedLines);
                     }
                     else
                     {
-                        multiselectedLines.Remove(line.LineIndex);
+                        linesCurrentlyBeingSelected.Remove(line.LineIndex);
                         line.UnRender(geometryMultiSelectedLines);
                     }
                 }
@@ -184,7 +207,7 @@ namespace PlushIT.ViewModels
         }
 
 
-        public void ApplyFunctionToNearestEdge(RayMeshGeometry3DHitTestResult hitTestResult, Action<Line3D> act)
+        private void ApplyFunctionToNearestEdge(RayMeshGeometry3DHitTestResult hitTestResult, Action<Line3D> act)
         {
             if (Model is not null && 
                 hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex1 && 
@@ -232,7 +255,7 @@ namespace PlushIT.ViewModels
                 }
                 else if (points.Count == 3) // User is over the inside of the triangle, so now I get to do math again. Worst case senario.
                 {
-                    Surface3D? triangle = null;
+                    Surface3D triangle;
                     Dictionary<int, int> surfaceIndexesToOccurences = [];
                     int dictIndex, i;
 
@@ -288,16 +311,274 @@ namespace PlushIT.ViewModels
             }
         }
 
-        private void SelectVertex(Line3D edge)
+        private void ApplyFunctionToNearestPoint(RayMeshGeometry3DHitTestResult hitTestResult, Action<IndexPoint3D> act)
         {
-            if (SelectedLines.TryAdd(edge.LineIndex, edge))
+            if (Model is not null &&
+                hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex1 &&
+                hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex2 &&
+                hitTestResult.MeshHit.Positions.Count > hitTestResult.VertexIndex3)
+            {
+                Point3D[] pts =
+                    [hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex1],
+                hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex2],
+                hitTestResult.MeshHit.Positions[hitTestResult.VertexIndex3]];
+
+                List<IndexPoint3D> points = [];
+
+                foreach (Point3D pos in pts)
+                {
+                    if (Model.AllPoints.TryGetValue(pos, out IndexPoint3D? pt) && pt is not null)
+                    {
+                        points.Add(pt);
+                    }
+                }
+
+                if (points.Count == 1)
+                {
+                    double pt1Dist = ThirdDimensionalCalculations.DistanceBetweenPoints(points[0].Point, hitTestResult.PointHit);
+                    foreach (Line3D line in points[0].ConnectedLines)
+                    {
+                        if (line.StartPoint.OuterPositionNumber == points[0].OuterPositionNumber)
+                        {
+                            if (pt1Dist > ThirdDimensionalCalculations.DistanceBetweenPoints(hitTestResult.PointHit, line.EndPoint.Point))
+                            {
+                                act(line.EndPoint);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            if (pt1Dist > ThirdDimensionalCalculations.DistanceBetweenPoints(hitTestResult.PointHit, line.StartPoint.Point))
+                            {
+                                act(line.StartPoint);
+                                return;
+                            }
+                        }
+                    }
+
+                    act(points[0]);
+                    return;
+                }
+                else if (points.Count == 2)
+                {
+                    if (ThirdDimensionalCalculations.DistanceBetweenPoints(points[0].Point, hitTestResult.PointHit) < 
+                        ThirdDimensionalCalculations.DistanceBetweenPoints(points[1].Point, hitTestResult.PointHit))
+                    {
+                        act(points[0]);
+                    }
+                    else
+                    {
+                        act(points[1]);
+                    }
+                    return;
+                }
+                else if (points.Count == 3)
+                {
+                    double dist1 = ThirdDimensionalCalculations.DistanceBetweenPoints(points[0].Point, hitTestResult.PointHit);
+                    double dist2 = ThirdDimensionalCalculations.DistanceBetweenPoints(points[1].Point, hitTestResult.PointHit);
+                    double dist3 = ThirdDimensionalCalculations.DistanceBetweenPoints(points[2].Point, hitTestResult.PointHit);
+
+                    if (dist1 < dist2 && dist1 < dist3)
+                    {
+                        act(points[0]);
+                        return;
+                    }
+                    else if (dist2 < dist3 && dist2 < dist1)
+                    {
+                        act(points[1]);
+                        return;
+                    }
+                    else
+                    {
+                        act(points[2]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void SelectPoint(IndexPoint3D point)
+        {
+            if (pointsCurrentlyBeingSelected.Count > 1 && pointsCurrentlyBeingSelected.First().OuterPositionNumber == point.OuterPositionNumber)
+            {
+                List<Line3D> path = FindShortestPathBetweenTwoPoints(pointsCurrentlyBeingSelected.Last(), point);
+
+                foreach (Line3D line in path)
+                {
+                    linesCurrentlyBeingSelected.Add(line.LineIndex, line);
+                    line.Render(geometryMultiSelectedLines);
+                }
+
+                foreach (Line3D line in linesCurrentlyBeingSelected.Values)
+                {
+                    line.UnRender(geometryMultiSelectedLines);
+                    if (selectedLines.TryAdd(line.LineIndex, line))
+                    {
+                        line.Render(geometrySelectedLines);
+                    }
+                }
+
+                linesCurrentlyBeingSelected.Clear();
+                pointsCurrentlyBeingSelected.Clear();
+                geometryMultiSelectedPoints.Positions.Clear();
+                geometryMultiSelectedPoints.TextureCoordinates.Clear();
+                RenderHoverPoint(false, point);
+            }
+            else if (pointsCurrentlyBeingSelected.Count > 0 && pointsCurrentlyBeingSelected.Last().OuterPositionNumber == point.OuterPositionNumber)
+            {
+                pointsCurrentlyBeingSelected.Remove(point);
+                point.UnRender(geometryMultiSelectedPoints);
+                RenderHoverPoint(false, point);
+            }
+            else
+            {
+                if (pointsCurrentlyBeingSelected.Count > 0)
+                {
+                    if (!point.ConnectedLines.Any(x => linesCurrentlyBeingSelected.ContainsKey(x.LineIndex)))
+                    {
+                        List<Line3D> path = FindShortestPathBetweenTwoPoints(pointsCurrentlyBeingSelected.Last(), point);
+
+                        foreach (Line3D line in path)
+                        {
+                            linesCurrentlyBeingSelected.Add(line.LineIndex, line);
+                            line.Render(geometryMultiSelectedLines);
+                        }
+                    }
+                }
+                pointsCurrentlyBeingSelected.Add(point);
+                point.Render(geometryMultiSelectedPoints);
+                RenderHoverPoint(true, point);
+            }
+        }
+
+        private List<Line3D> FindShortestPathBetweenTwoPoints(IndexPoint3D start, IndexPoint3D end)
+        {
+            int i = 0;
+            List<(double, Line3D, IndexPoint3D, int)> linesAndWeights = [];
+            IndexPoint3D candidatePoint;
+            foreach (Line3D line in start.ConnectedLines)
+            {
+                if (linesCurrentlyBeingSelected.ContainsKey(line.LineIndex))
+                {
+                    continue;
+                }
+
+                candidatePoint = line.StartPoint.OuterPositionNumber == start.OuterPositionNumber ? line.EndPoint : line.StartPoint;
+
+                double distance = ThirdDimensionalCalculations.DistanceBetweenPoints(candidatePoint.Point, end.Point);
+
+                if (distance == 0D)
+                {
+                    return [line];
+                }
+
+                if (!candidatePoint.ConnectedLines.Any(x => linesCurrentlyBeingSelected.ContainsKey(x.LineIndex)))
+                {
+                    linesAndWeights.Add(new(distance, line, candidatePoint, i++));
+                }
+            }
+
+            (double, List<Line3D>, Dictionary<int, Line3D>)[] ret = new (double, List<Line3D>, Dictionary<int, Line3D>)[linesAndWeights.Count];
+            Dictionary<int, Line3D>[] arrDict = new Dictionary<int, Line3D>[ret.Length]; 
+            for (i = 0; i < ret.Length; i++)
+            {
+                arrDict[i] = new(linesCurrentlyBeingSelected);
+            }
+
+            Parallel.ForEach(linesAndWeights, tuple =>
+            {
+                ret[tuple.Item4] = FindShortestPathBetweenTwoPoints(tuple.Item3, end, (tuple.Item1, [tuple.Item2], arrDict[tuple.Item4]), new(-1D, [], []));
+            });
+
+            return ret.Where(x => x.Item1 > 0).MinBy(x => x.Item1).Item2;
+        }
+
+        private static (double, List<Line3D>, Dictionary<int, Line3D>) FindShortestPathBetweenTwoPoints(IndexPoint3D start, IndexPoint3D end, (double, List<Line3D>, Dictionary<int, Line3D>) bag, (double, List<Line3D>, Dictionary<int, Line3D>) currentRecord)
+        {
+            if (currentRecord.Item1 != -1D && currentRecord.Item1 <= bag.Item1)
+            {
+                return currentRecord;
+            }
+
+            if (start.ConnectedLines.Count == 1)
+            {
+                return currentRecord;
+            }
+
+            List<(double, Line3D, IndexPoint3D)> linesAndWeights = [];
+            IndexPoint3D candidatePoint;
+            foreach (Line3D line in start.ConnectedLines)
+            {
+                if (bag.Item2.Contains(line) || bag.Item3.ContainsKey(line.LineIndex))
+                {
+                    continue;
+                }
+
+                candidatePoint = line.StartPoint.OuterPositionNumber == start.OuterPositionNumber ? line.EndPoint : line.StartPoint;
+
+                double distance = ThirdDimensionalCalculations.DistanceBetweenPoints(candidatePoint.Point, end.Point);
+
+                if (distance == 0D)
+                {
+                    bag.Item1 += line.Length;
+                    bag.Item2.Add(line);
+                    return bag;
+                }
+
+                if (!candidatePoint.ConnectedLines.Any(x => bag.Item3.ContainsKey(x.LineIndex)))
+                {
+                    linesAndWeights.Add(new(distance, line, candidatePoint));
+                }
+            }
+
+            (double, List<Line3D>, Dictionary<int, Line3D>) ret = currentRecord;
+            (double, List<Line3D>, Dictionary<int, Line3D>) compare;
+            foreach ((double, Line3D, IndexPoint3D) tuple in linesAndWeights.OrderBy(x => x.Item1))
+            {
+                bag.Item1 += tuple.Item2.Length;
+                bag.Item2 = new(bag.Item2) { tuple.Item2 };
+
+                compare = FindShortestPathBetweenTwoPoints(tuple.Item3, end, bag, ret);
+
+                if (ret.Item1 == -1D)
+                {
+                    ret = compare;
+                }
+                else
+                {
+                    if (ret.Item1 > compare.Item1)
+                    {
+                        ret = compare;
+                    }
+                    else
+                    {
+                        return ret;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        private void RenderPenHoverPoint(IndexPoint3D point)
+        {
+            if ((pointsCurrentlyBeingSelected.Count > 0 && pointsCurrentlyBeingSelected.First().OuterPositionNumber == point.OuterPositionNumber) || 
+                !point.ConnectedLines.Any(x => linesCurrentlyBeingSelected.ContainsKey(x.LineIndex)))
+            {
+                RenderHoverPoint(pointsCurrentlyBeingSelected.Contains(point), point);
+            }
+        }
+
+        private void SelectEdge(Line3D edge)
+        {
+            if (selectedLines.TryAdd(edge.LineIndex, edge))
             {
                 edge.Render(geometrySelectedLines);
                 RenderHoverLine(true, edge);
             }
             else
             {
-                SelectedLines.Remove(edge.LineIndex);
+                selectedLines.Remove(edge.LineIndex);
                 edge.UnRender(geometrySelectedLines);
                 RenderHoverLine(false, edge);
             }
@@ -305,15 +586,28 @@ namespace PlushIT.ViewModels
 
         private void RenderHoverLine(bool isSelected, Line3D edge)
         {
-            hoverContent.BackMaterial = new DiffuseMaterial(isSelected ? Brushes.Red : Brushes.Yellow);
-            hoverContent.Material = new DiffuseMaterial(isSelected ? Brushes.Red : Brushes.Yellow);
-            edge.RenderHover(geometryHover);
+            hoverEdgeContent.BackMaterial = new DiffuseMaterial(isSelected ? Brushes.Red : Brushes.Yellow);
+            hoverEdgeContent.Material = new DiffuseMaterial(isSelected ? Brushes.Red : Brushes.Yellow);
+            edge.RenderHover(geometryEdgeHover);
+        }
+
+        private void RenderHoverPoint(bool isSelected, IndexPoint3D point)
+        {
+            bool hasCompletedARing = pointsCurrentlyBeingSelected.Count > 1 && point.OuterPositionNumber == pointsCurrentlyBeingSelected[0].OuterPositionNumber;
+            Brush pointsCurrentlySelectedBrush = hasCompletedARing ? Brushes.LightGreen : Brushes.Aqua;
+            Brush hoverBrush = isSelected ? (hasCompletedARing ? Brushes.LightGreen : Brushes.Red) : Brushes.Yellow;
+
+            multiSelectedPointsContent.BackMaterial = new DiffuseMaterial(pointsCurrentlySelectedBrush);
+            multiSelectedPointsContent.Material = new DiffuseMaterial(pointsCurrentlySelectedBrush);
+
+            hoverPointContent.BackMaterial = new DiffuseMaterial(hoverBrush);
+            hoverPointContent.Material = new DiffuseMaterial(hoverBrush);
+            point.RenderHover(geometryPointHover);
         }
 
         public void ChangeCameraXY(double x, double y)
         {
             CameraPosition = new(cameraPosition.X + (float)x, cameraPosition.Y + (float)y, cameraPosition.Z);
         }
-
     }
 }
